@@ -1,6 +1,4 @@
+# movesic
 
-# yt-tools
+Move your music between services.
 
-```bash
-pip install -r requirements.txt
-```
