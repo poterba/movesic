@@ -1,6 +1,7 @@
 from nicegui import ui
 from ytmusicapi import YTMusic
 
+
 @ui.page("/")
 def index():
     ytmusic = YTMusic()
