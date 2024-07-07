@@ -8,6 +8,7 @@ __pycache__/
 .DS_Store
 
 # user
+/.vscode
 .env
 /.nicegui
 /oauth.json
