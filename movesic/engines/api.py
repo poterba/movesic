@@ -1,6 +1,7 @@
 import abc
 from dataclasses import dataclass
 
+
 @dataclass
 class Playlist:
     name: str
@@ -8,17 +9,20 @@ class Playlist:
 
 
 class Engine:
-
     @abc.abstractmethod
-    def auth(self): ...
+    def auth(self):
+        ...
 
     # from
     @abc.abstractmethod
-    def get_playlists(self): ...
+    def get_playlists(self):
+        ...
 
     @abc.abstractmethod
-    def get_songs(self, playlist): ...
+    def get_songs(self, playlist):
+        ...
 
     # to
     @abc.abstractmethod
-    def find_song(self, name): ...
+    def find_song(self, name):
+        ...

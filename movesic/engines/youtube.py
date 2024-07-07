@@ -5,7 +5,6 @@ from movesic.engines.api import Engine
 
 
 class Youtube(Engine):
-
     def __init__(self):
         self.ytmusic = YTMusic(auth="headers_auth.json")
 
@@ -18,7 +17,9 @@ class Youtube(Engine):
     def find_song():
         pass
 
+
 # old stuff to analyze
+
 
 def sort_songs():
     results = []

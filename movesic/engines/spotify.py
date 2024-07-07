@@ -7,7 +7,6 @@ scope = "user-library-read"
 
 
 class Spotify(Engine):
-
     def __init__(self, client_id, client_secret):
         # auth_manager = SpotifyClientCredentials(client_id, client_secret)
         auth_manager = SpotifyOAuth(
