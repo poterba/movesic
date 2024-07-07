@@ -1,5 +1,15 @@
-.venv
+# python
+__pycache__/
+.venv/
+/dist
+/build
 
-headers_auth.json
+# macos
+.DS_Store
 
-*.txt
+# user
+/.vscode
+.env
+/.nicegui
+/oauth.json
+/.cache
