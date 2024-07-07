@@ -26,6 +26,9 @@ black = "^22.1.0"
 
 # generate
 
+[tool.poetry.group.dev.dependencies]
+isort = "^5.13.2"
+
 [tool.poetry-git-version-plugin]
 make_alpha_version = true
 
@@ -39,3 +42,8 @@ movesic = { source = "movesic/main.py", type = "onefile", bundle = true, windowe
 
 [tool.poetry-pyinstaller-plugin.collect]
 all = ['movesic']
+
+# lint
+
+[tool.isort]
+profile = "black"

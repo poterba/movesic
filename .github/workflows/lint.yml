@@ -23,3 +23,7 @@ jobs:
     - uses: psf/black@stable
       with:
         options: "--check --verbose"
+
+    - uses: isort/isort-action@v1
+      with:
+        sort-paths: movesic

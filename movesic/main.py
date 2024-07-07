@@ -1,11 +1,14 @@
 # fmt: off
 from multiprocessing import freeze_support
+
 freeze_support()
 # fmt: on
 
 
-from nicegui import ui
 import logging
+
+from nicegui import ui
+
 from movesic.gui.widgets import *
 
 

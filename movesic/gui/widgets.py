@@ -1,9 +1,10 @@
-from functools import partial
-from nicegui import ui, app
-import ytmusicapi
-from movesic import engines
 import webbrowser
+from functools import partial
 
+import ytmusicapi
+from nicegui import app, ui
+
+from movesic import engines
 
 _SPOTIFY_MD = """
 You should create app and get some keys. Tick `Web API` checkbox.

@@ -1,5 +1,5 @@
 import spotipy
-from spotipy.oauth2 import SpotifyOAuth, SpotifyClientCredentials, SpotifyPKCE
+from spotipy.oauth2 import SpotifyClientCredentials, SpotifyOAuth, SpotifyPKCE
 
 from movesic.engines.api import Engine, Playlist
 

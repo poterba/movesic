@@ -1,4 +1,5 @@
 from nicegui import ui
+
 from movesic.gui import widgets
 
 
