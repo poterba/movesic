@@ -9,7 +9,7 @@ license = "MIT"
 maintainers = ["poterba"]
 name = "movesic"
 readme = "README.md"
-version = "0.1.1"
+version = "0"
 
 [tool.poetry.scripts]
 movesic = "movesic.main:main"
@@ -23,6 +23,13 @@ spotipy = "^2.24.0"
 
 [tool.poetry.dev-dependencies]
 black = "^22.1.0"
+
+# generate
+
+[tool.poetry-git-version-plugin]
+make_alpha_version = true
+
+# build
 
 [tool.poetry-pyinstaller-plugin]
 version = "6.7.0"
