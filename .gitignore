@@ -1,12 +1,14 @@
 # python
 __pycache__/
 .venv/
-.env
 /dist
 /build
 
 # macos
 .DS_Store
 
-# ytmusicapi
-headers_auth.json
+# user
+.env
+/.nicegui
+/oauth.json
+/.cache

@@ -11,21 +11,21 @@ name = "movesic"
 readme = "README.md"
 version = "0.1.1"
 
+[tool.poetry.scripts]
+movesic = "movesic.main:main"
+
 [tool.poetry.dependencies]
 python = "^3.9"
 nicegui = "^1.4.27"
 pywebview = "^5.1"
 ytmusicapi = "^1.7.3"
+spotipy = "^2.24.0"
 
 [tool.poetry.dev-dependencies]
 black = "^22.1.0"
 
 [tool.poetry-pyinstaller-plugin]
 version = "6.7.0"
-disable-upx = true
-recursive-copy-metadata = ["nicegui"]
-# copy-metadata = ["nicegui"]
-
 
 [tool.poetry-pyinstaller-plugin.scripts]
 movesic = { source = "movesic/main.py", type = "onefile", bundle = true, windowed = true }

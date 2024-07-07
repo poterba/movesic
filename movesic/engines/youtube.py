@@ -1,6 +1,24 @@
-from ytmusicapi import YTMusic
 import logging
 
+from ytmusicapi import YTMusic
+from movesic.engines.api import Engine
+
+
+class Youtube(Engine):
+
+    def __init__(self):
+        self.ytmusic = YTMusic(auth="headers_auth.json")
+
+    def get_playlists():
+        pass
+
+    def get_songs():
+        pass
+
+    def find_song():
+        pass
+
+# old stuff to analyze
 
 def sort_songs():
     results = []
@@ -42,4 +60,26 @@ def main():
         ytmusic.add_playlist_items(vk_pl["playlistId"], [result["videoId"]])
         logging.info(
             "added {}/{} {}".format(idx, len(songs), song_entry_to_string(result))
+        )
+
+
+def main():
+    ytmusic = YTMusic(auth="headers_auth.json")
+
+    playlists = ytmusic.get_library_playlists()
+    vk_pl = next(filter(lambda x: x["title"] == "VK", playlists), None)
+    logging.info("Found playlist {}".format(vk_pl["playlistId"]))
+
+    all_songs = ytmusic.get_playlist(vk_pl["playlistId"], limit=2000)
+    songs = list(filter(lambda x: x["likeStatus"] != "LIKE", all_songs["tracks"]))
+    len_songs = len(songs)
+    logging.info("Found {} unliked songs in it, fixing".format(len_songs))
+
+    for idx, song in enumerate(songs):
+        result = ytmusic.rate_song(song["videoId"], rating="LIKE")
+        runs = result["actions"][0]["addToToastAction"]["item"][
+            "notificationActionRenderer"
+        ]["responseText"]["runs"]
+        logging.info(
+            "{}/{} {}: {}".format(idx, len_songs, runs[0]["text"], song["title"])
         )
