@@ -14,7 +14,7 @@ SPOTIFY_SECRET = os.getenv("SPOTIFY_SECRET")
 @pytest.fixture(scope="session")
 def youtube():
     engine = Youtube(
-        "oauth.json",
+        "tests/oauth.json",
         client_id=YOUTUBE_CLIENT_ID,
         secret=YOUTUBE_SECRET,
     )

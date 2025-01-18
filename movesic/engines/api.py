@@ -3,6 +3,14 @@ from dataclasses import dataclass
 
 
 @dataclass
+class UserInfo:
+    name: str
+    avatar: str
+    id: str
+    external_url: str
+
+
+@dataclass
 class Song:
     name: str
     author: str
@@ -19,6 +27,9 @@ class Playlist:
 
 class Engine:
     # from
+    @abc.abstractmethod
+    def info(self): ...
+
     @abc.abstractmethod
     def get_playlists(self): ...
 

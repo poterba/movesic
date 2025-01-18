@@ -21,6 +21,16 @@ class Youtube(Engine):
             )
         self.ytmusic = YTMusic(auth=auth, oauth_credentials=oauth_credentials)
 
+    def info(self):
+        info = self.ytmusic.get_account_info()
+        return api.UserInfo(
+            name=info["accountName"],
+            avatar=info["accountPhotoUrl"],
+            id=info["channelHandle"],
+            # TODO
+            external_url=None,
+        )
+
     def get_playlists(self):
         playlists = self.ytmusic.get_library_playlists(limit=None)
         playlists = [

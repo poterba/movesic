@@ -3,6 +3,7 @@ import logging
 
 def test_read(spotify, caplog):
     caplog.set_level(logging.DEBUG)
+    _info = spotify.info()
     playlists = spotify.get_playlists()
     for pl in playlists:
         songs = spotify.get_songs(pl)

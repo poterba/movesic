@@ -42,6 +42,15 @@ class Spotify(api.Engine):
         self.sp = spotipy.Spotify(auth_manager=auth_manager)
         # self.auth_manager = SpotifyOAuth(client_id, client_secret, scope=scope)
 
+    def info(self):
+        info = self.sp.current_user()
+        return api.UserInfo(
+            name=info["display_name"],
+            avatar=info["images"][0]["url"],
+            id=info["id"],
+            external_url=info["href"],
+        )
+
     def get_playlists(self):
         query_result = self.sp.current_user_playlists()
         result = []
@@ -71,5 +80,5 @@ class Spotify(api.Engine):
             name=track["name"],
             author=authors,
             id=track["id"],
-            external_url=track["href"]
+            external_url=track["href"],
         )
