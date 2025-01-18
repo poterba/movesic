@@ -1,15 +1,11 @@
 # fmt: off
 from multiprocessing import freeze_support
-
 freeze_support()
 # fmt: on
 
-
 import logging
-
 from nicegui import ui
-
-from movesic.gui.widgets import *
+from movesic.gui.widgets import *  # noqa: F403
 
 
 def main():

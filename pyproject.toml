@@ -1,36 +1,38 @@
-[build-system]
-build-backend = "poetry.core.masonry.api"
-requires = ["poetry-core>=1.0.0"]
-
 [tool.poetry]
+name = "movesic"
+version = "0.0.0"
 authors = ["poterba"]
 description = "Simply move your music between services"
 license = "MIT"
 maintainers = ["poterba"]
-name = "movesic"
 readme = "README.md"
-version = "0"
 
 [tool.poetry.scripts]
 movesic = "movesic.main:main"
 
 [tool.poetry.dependencies]
-python = "^3.9"
+python = "^3.9,<3.13"
 nicegui = "^1.4.27"
 pywebview = "^5.1"
 ytmusicapi = "^1.7.3"
 spotipy = "^2.24.0"
 
-[tool.poetry.dev-dependencies]
-black = "^22.1.0"
+[tool.poetry.group.dev.dependencies]
+isort = "^5.13.2"
+ruff = "^0.9.2"
+
+[tool.poetry.group.test.dependencies]
+pytest = "^8.3.4"
+pytest-cov = "^6.0.0"
+
+[tool.poetry.requires-plugins]
+poetry-dynamic-versioning = { version = ">=1.0.0,<2.0.0", extras = ["plugin"] }
 
 # generate
 
-[tool.poetry.group.dev.dependencies]
-isort = "^5.13.2"
-
-[tool.poetry-git-version-plugin]
-make_alpha_version = true
+[tool.poetry-dynamic-versioning]
+enable = true
+style = "semver"
 
 # build
 
@@ -45,5 +47,15 @@ all = ['movesic']
 
 # lint
 
-[tool.isort]
-profile = "black"
+[tool.ruff.format]
+preview = true
+
+[tool.ruff.lint]
+# Skip unused variable rules (`F841`).
+extend-ignore = ["E402"]
+
+# build
+
+[build-system]
+build-backend = "poetry_dynamic_versioning.backend"
+requires = ["poetry-core>=1.0.0", "poetry-dynamic-versioning>=1.0.0,<2.0.0"]

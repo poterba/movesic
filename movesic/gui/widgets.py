@@ -1,7 +1,6 @@
 import webbrowser
 from functools import partial
 
-import ytmusicapi
 from nicegui import app, ui
 
 from movesic import engines
@@ -53,10 +52,10 @@ def index():
         ui.label("Register 2 or more services")
     else:
         with ui.row(wrap=False).classes("w-full"):
-            from_select = ui.select(
+            ui.select(
                 available_services, value=available_services[0]
             ).classes("w-full")
-            to_select = ui.select(
+            ui.select(
                 available_services, value=available_services[0]
             ).classes("w-full")
         ui.button("RUN").classes("w-full")

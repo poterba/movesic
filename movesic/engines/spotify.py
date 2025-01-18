@@ -1,5 +1,5 @@
 import spotipy
-from spotipy.oauth2 import SpotifyClientCredentials, SpotifyOAuth, SpotifyPKCE
+from spotipy.oauth2 import SpotifyOAuth
 
 from movesic.engines.api import Engine, Playlist
 
@@ -12,7 +12,7 @@ class Spotify(Engine):
         auth_manager = SpotifyOAuth(
             client_id=client_id,
             client_secret=client_secret,
-            redirect_uri=f"http://localhost:44444/",
+            redirect_uri="http://localhost:44444/",
             scope=scope,
             # open_browser=False,
         )
