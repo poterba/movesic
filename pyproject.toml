@@ -27,6 +27,7 @@ pytest-cov = "^6.0.0"
 
 [tool.poetry.requires-plugins]
 poetry-dynamic-versioning = { version = ">=1.0.0,<2.0.0", extras = ["plugin"] }
+poethepoet = { version = "^0.32.1", extras = ["poetry_plugin"] }
 
 # generate
 
@@ -34,7 +35,7 @@ poetry-dynamic-versioning = { version = ">=1.0.0,<2.0.0", extras = ["plugin"] }
 enable = true
 style = "semver"
 
-# build
+# package
 
 [tool.poetry-pyinstaller-plugin]
 version = "6.7.0"
