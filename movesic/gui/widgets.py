@@ -3,7 +3,7 @@ from functools import partial
 
 from nicegui import app, ui
 
-from movesic import engines
+from movesic.engines import api
 
 _SPOTIFY_MD = """
 You should create app and get some keys. Tick `Web API` checkbox.
@@ -28,7 +28,7 @@ def _erase_config(name):
     ui.navigate.reload()
 
 
-def header():
+def show_header():
     tabs_dict = {
         "HOME": "/",
         "YOUTUBE": "/youtube",
@@ -42,7 +42,7 @@ def header():
         ui.space()
 
 
-def index():
+def show_index():
     available_services = []
     for service in ["youtube", "spotify"]:
         if service in app.storage.general:
@@ -52,69 +52,67 @@ def index():
         ui.label("Register 2 or more services")
     else:
         with ui.row(wrap=False).classes("w-full"):
-            ui.select(
-                available_services, value=available_services[0]
-            ).classes("w-full")
-            ui.select(
-                available_services, value=available_services[0]
-            ).classes("w-full")
+            ui.select(available_services).classes("w-full")
+            ui.select(available_services).classes("w-full")
         ui.button("RUN").classes("w-full")
 
 
-def youtube():
+def show_youtube_setup():
+    ui.markdown(_YOUTUBE_MD)
+    ui.button(
+        "To My dashboard",
+        on_click=lambda: webbrowser.open("https://console.cloud.google.com/auth"),
+    )
+    values = {"client_id": "", "secret": ""}
+    if "youtube_app" in app.storage.general:
+        values = app.storage.general["youtube_app"]
+    client_id = ui.input(placeholder="Client ID", value=values["client_id"]).classes(
+        "w-full"
+    )
+    secret = ui.input(placeholder="Client secret", value=values["secret"]).classes(
+        "w-full"
+    )
+    ui.button(
+        "Save",
+        on_click=lambda: _set_config(
+            "youtube_app",
+            {"client_id": client_id.value, "secret": secret.value},
+        ),
+    )
+
+
+def show_spotify_setup():
     with ui.card().classes("w-full"):
-        if "youtube" in app.storage.general:
-            yt = engines.Youtube()
-            ui.label("Your playlists:")
-            with ui.list().classes("w-full"):
-                for p in yt.get_playlists():  # type: movesic.api.Playlist
-                    ui.item(p.name, on_click=lambda: webbrowser.open(p.external_url))
-        else:
-            ui.markdown(_YOUTUBE_MD)
-            # ui.button(
-            #     "To My dashboard",
-            #     on_click=lambda: webbrowser.open(
-            #         "https://developer.spotify.com/dashboard/applications"
-            #     ),
-            # )
-            client_id = ui.input(placeholder="Client ID").classes("w-full")
-            secret = ui.input(placeholder="Client secret").classes("w-full")
-            ui.button(
-                "Save",
-                on_click=lambda: _set_config(
-                    "spotify",
-                    {"client_id": client_id.value, "secret": secret.value},
-                ),
-            )
+        ui.markdown(_SPOTIFY_MD)
+        ui.button(
+            "To My dashboard",
+            on_click=lambda: webbrowser.open(
+                "https://developer.spotify.com/dashboard/applications"
+            ),
+        )
+        client_id = ui.input(placeholder="Client ID").classes("w-full")
+        secret = ui.input(placeholder="Client secret").classes("w-full")
+        ui.button(
+            "Save",
+            on_click=lambda: _set_config(
+                "spotify_app",
+                {"client_id": client_id.value, "secret": secret.value},
+            ),
+        )
 
 
-def spotify():
+def show_engine(eng: api.Engine, config_key: str):
+    def _open_playlist(p):
+        webbrowser.open(p.external_url)
+
     with ui.card().classes("w-full"):
-        if "spotify" in app.storage.general:
-            config = app.storage.general["spotify"]
-            sp = engines.Spotify(config["client_id"], config["secret"])
-            ui.label("Your playlists:")
-            with ui.list().classes("w-full"):
-                for p in sp.get_playlists():  # type: movesic.api.Playlist
-                    ui.item(p.name, on_click=lambda: webbrowser.open(p.external_url))
+        ui.label("Your playlists:")
+        with ui.list().classes("w-full"):
+            p: api.Playlist
+            for p in eng.get_playlists():
+                with ui.item(on_click=partial(_open_playlist, p)):
+                    with ui.item_section():
+                        ui.item_label(p.name)
+                        ui.item_label(p.id).props("caption")
 
-            ui.button("Reset", on_click=lambda: _erase_config("spotify")).classes(
-                "w-full"
-            )
-        else:
-            ui.markdown(_SPOTIFY_MD)
-            ui.button(
-                "To My dashboard",
-                on_click=lambda: webbrowser.open(
-                    "https://developer.spotify.com/dashboard/applications"
-                ),
-            )
-            client_id = ui.input(placeholder="Client ID").classes("w-full")
-            secret = ui.input(placeholder="Client secret").classes("w-full")
-            ui.button(
-                "Save",
-                on_click=lambda: _set_config(
-                    "spotify",
-                    {"client_id": client_id.value, "secret": secret.value},
-                ),
-            )
+        ui.button("Reset", on_click=lambda: _erase_config(config_key)).classes("w-full")

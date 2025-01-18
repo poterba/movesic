@@ -1,65 +1,62 @@
-import logging
-
 from ytmusicapi import YTMusic
+from ytmusicapi.auth.oauth import OAuthCredentials
 
+from movesic.engines import api
 from movesic.engines.api import Engine
 
 
 class Youtube(Engine):
-    def __init__(self):
-        self.ytmusic = YTMusic(auth="headers_auth.json")
+    def __init__(
+        self,
+        auth=None,
+        *,
+        client_id: str | None = None,
+        secret: str | None = None,
+    ):
+        oauth_credentials = None
+        if client_id and secret:
+            oauth_credentials = OAuthCredentials(
+                client_id=client_id,
+                client_secret=secret,
+            )
+        self.ytmusic = YTMusic(auth=auth, oauth_credentials=oauth_credentials)
 
-    def get_playlists():
-        pass
+    def get_playlists(self):
+        playlists = self.ytmusic.get_library_playlists(limit=None)
+        playlists = [
+            api.Playlist(
+                name=x["title"],
+                id=x["playlistId"],
+                external_url=f"https://music.youtube.com/playlist?list={x['playlistId']}",
+            )
+            for x in playlists
+        ]
+        return playlists
 
-    def get_songs():
-        pass
+    def get_songs(self, playlist: api.Playlist):
+        results = self.ytmusic.get_playlist(
+            playlist.id,
+            limit=None,
+        )
+        results = [self._to_song(x) for x in results["tracks"]]
+        return results
 
-    def find_song():
-        pass
+    def find_song(self, name, author=None):
 
+        results = self.ytmusic.search(
+            f"{author} - {name}",
+            filter="songs",
+            ignore_spelling=True,
+            limit=3,
+        )
+        results = [self._to_song(x) for x in results]
+        return results
 
-# old stuff to analyze
-
-
-def sort_songs():
-    results = []
-    with open("vk.txt", "r") as f:
-        results = f.readlines()
-    songs = []
-    for _, artist, song in (results[i : i + 3] for i in range(0, len(results), 3)):
-        # for _, artist, song in results:
-        songs.append("{} - {}".format(artist.strip(), song.strip()))
-    return songs
-
-
-def song_entry_to_string(yt_song_entry):
-    artists = map(lambda x: x["name"], yt_song_entry["artists"])
-    return "{} - {}".format(",".join(artists), yt_song_entry["title"])
-
-
-def ask_song_variant(song, yt, filter_tag):
-    search_results = yt.search(song, filter=filter_tag, ignore_spelling=True)
-    options = list(map(song_entry_to_string, search_results[:5]))
-    options.insert(0, None)
-
-
-def main():
-    ytmusic = YTMusic(auth="headers_auth.json")
-
-    playlists = ytmusic.get_library_playlists()
-    vk_pl = next(filter(lambda x: x["title"] == "VK", playlists), None)
-    logging.info("Found playlist {}".format(vk_pl["description"]))
-
-    songs = sort_songs()
-    for idx, song in enumerate(songs):
-        result = ask_song_variant(song, ytmusic, "songs")
-        if not result:
-            result = ask_song_variant(song, ytmusic, "videos")
-        if not result:
-            logging.warning("Skipping {}".format(song))
-            continue
-        ytmusic.add_playlist_items(vk_pl["playlistId"], [result["videoId"]])
-        logging.info(
-            "added {}/{} {}".format(idx, len(songs), song_entry_to_string(result))
+    def _to_song(self, x):
+        author_str = ", ".join([a["name"] for a in x["artists"]])
+        return api.Song(
+            name=x["title"],
+            author=author_str,
+            id=x["videoId"],
+            external_url=f"https://music.youtube.com/watch?v={x['videoId']}",
         )

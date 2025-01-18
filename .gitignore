@@ -3,6 +3,7 @@ __pycache__/
 .venv/
 /dist
 /build
+/.coverage
 
 # macos
 .DS_Store
@@ -12,4 +13,3 @@ __pycache__/
 .env
 /.nicegui
 /oauth.json
-/.cache

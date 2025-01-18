@@ -3,15 +3,21 @@ from dataclasses import dataclass
 
 
 @dataclass
+class Song:
+    name: str
+    author: str
+    id: str
+    external_url: str
+
+
+@dataclass
 class Playlist:
     name: str
+    id: str
     external_url: str
 
 
 class Engine:
-    @abc.abstractmethod
-    def auth(self): ...
-
     # from
     @abc.abstractmethod
     def get_playlists(self): ...
@@ -21,4 +27,4 @@ class Engine:
 
     # to
     @abc.abstractmethod
-    def find_song(self, name): ...
+    def find_song(self, name, author=None): ...
