@@ -4,6 +4,7 @@ __pycache__/
 /dist
 /build
 /.coverage
+/.python-version
 
 # macos
 .DS_Store
