@@ -22,5 +22,5 @@ jobs:
         python-version: ${{ env.PYTHON_VERSION }}
     - uses: astral-sh/ruff-action@v3
       with:
-        src: "./src"
+        src: "./movesic"
         args: "format --check"
