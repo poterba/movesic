@@ -31,8 +31,7 @@ def _erase_config(name):
 def show_header():
     tabs_dict = {
         "HOME": "/",
-        "YOUTUBE": "/youtube",
-        "SPOTIFY": "/spotify",
+        "SETTINGS": "/settings",
     }
     with ui.header():
         ui.space()
@@ -62,6 +61,12 @@ def show_youtube_setup():
     ui.button(
         "To My dashboard",
         on_click=lambda: webbrowser.open("https://console.cloud.google.com/auth"),
+    )
+    ui.button(
+        "To Credentials",
+        on_click=lambda: webbrowser.open(
+            "https://console.cloud.google.com/apis/credentials"
+        ),
     )
     values = {"client_id": "", "secret": ""}
     if "youtube_app" in app.storage.general:
@@ -106,8 +111,21 @@ def show_engine(eng: api.Engine, config_key: str):
         webbrowser.open(p.external_url)
 
     with ui.card().classes("w-full"):
-        ui.label("Your playlists:")
         with ui.list().classes("w-full"):
+            user_info = eng.info()
+            with ui.item():
+                if user_info.avatar:
+                    with ui.item_section().props("avatar"):
+                        ui.image(user_info.avatar)
+                with ui.item_section():
+                    ui.item_label(user_info.name)
+                    ui.item_label(user_info.id).props("caption")
+                if user_info.external_url:
+                    with ui.item_section().props("side"):
+                        ui.button(
+                            icon="link",
+                            on_click=partial(webbrowser.open, user_info.external_url),
+                        ).props("outline")
             p: api.Playlist
             for p in eng.get_playlists():
                 with ui.item(on_click=partial(_open_playlist, p)):
@@ -115,4 +133,4 @@ def show_engine(eng: api.Engine, config_key: str):
                         ui.item_label(p.name)
                         ui.item_label(p.id).props("caption")
 
-        ui.button("Reset", on_click=lambda: _erase_config(config_key)).classes("w-full")
+    ui.button("Reset", on_click=lambda: _erase_config(config_key)).classes("w-full")

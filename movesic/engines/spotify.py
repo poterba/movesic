@@ -4,7 +4,12 @@ from spotipy.oauth2 import SpotifyOAuth
 
 from movesic.engines import api
 
-scope = "user-library-read"
+_SPOTIFY_SCOPES = [
+    "user-library-read",
+    "user-library-modify",
+    "playlist-modify-private",
+    "playlist-modify-public",
+]
 
 
 class StorageCacheHandler(CacheHandler):
@@ -13,17 +18,11 @@ class StorageCacheHandler(CacheHandler):
         self.storage = storage
 
     def get_cached_token(self):
-        """
-        Get and return a token_info dictionary object.
-        """
         if "spotify" in self.storage:
             return self.storage["spotify"]
         return None
 
     def save_token_to_cache(self, token_info):
-        """
-        Save a token_info dictionary object to the cache and return None.
-        """
         self.storage["spotify"] = token_info
         return None
 
@@ -35,7 +34,7 @@ class Spotify(api.Engine):
             client_id=client_id,
             client_secret=client_secret,
             redirect_uri="http://localhost:44444/",
-            scope=scope,
+            scope=",".join(_SPOTIFY_SCOPES),
             # open_browser=False,
             cache_handler=cache_handler,
         )
@@ -48,21 +47,34 @@ class Spotify(api.Engine):
             name=info["display_name"],
             avatar=info["images"][0]["url"],
             id=info["id"],
-            external_url=info["href"],
+            external_url=info["external_urls"]["spotify"],
         )
+
+    # playlist
 
     def get_playlists(self):
         query_result = self.sp.current_user_playlists()
-        result = []
-        for item in query_result["items"]:
-            result.append(
-                api.Playlist(
-                    name=item["name"],
-                    id=item["id"],
-                    external_url=item["external_urls"]["spotify"],
-                )
-            )
+        result = [self._to_playlist(item) for item in query_result["items"]]
         return result
+
+    def get_playlist(self, id):
+        _result = self.sp.playlist(id)
+        return self._to_playlist(_result)
+
+    def add_playlist(self, name, description="") -> api.Playlist:
+        _user = self.sp.current_user()
+        _result = self.sp.user_playlist_create(
+            _user["id"],
+            name=name,
+            public=False,
+            description=description,
+        )
+        return self._to_playlist(_result)
+
+    def delete_playlist(self, playlist: api.Playlist):
+        return self.sp.current_user_unfollow_playlist(playlist.id)
+
+    # songs
 
     def get_songs(self, playlist):
         query_result = self.sp.playlist(playlist.id)
@@ -74,6 +86,8 @@ class Spotify(api.Engine):
         result = [self._to_song(x) for x in query_result["tracks"]["items"]]
         return result
 
+    # util
+
     def _to_song(self, track):
         authors = ", ".join([x["name"] for x in track["artists"]])
         return api.Song(
@@ -81,4 +95,11 @@ class Spotify(api.Engine):
             author=authors,
             id=track["id"],
             external_url=track["href"],
+        )
+
+    def _to_playlist(self, item):
+        return api.Playlist(
+            name=item["name"],
+            id=item["id"],
+            external_url=item["external_urls"]["spotify"],
         )

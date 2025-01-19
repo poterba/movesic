@@ -1,3 +1,4 @@
+import logging
 from ytmusicapi import YTMusic
 from ytmusicapi.auth.oauth import OAuthCredentials
 
@@ -19,7 +20,10 @@ class Youtube(Engine):
                 client_id=client_id,
                 client_secret=secret,
             )
-        self.ytmusic = YTMusic(auth=auth, oauth_credentials=oauth_credentials)
+        self.ytmusic = YTMusic(
+            auth=auth,
+            oauth_credentials=oauth_credentials,
+        )
 
     def info(self):
         info = self.ytmusic.get_account_info()
@@ -31,28 +35,34 @@ class Youtube(Engine):
             external_url=None,
         )
 
+    # playlists
+
     def get_playlists(self):
         playlists = self.ytmusic.get_library_playlists(limit=None)
-        playlists = [
-            api.Playlist(
-                name=x["title"],
-                id=x["playlistId"],
-                external_url=f"https://music.youtube.com/playlist?list={x['playlistId']}",
-            )
-            for x in playlists
-        ]
+        playlists = [self._to_playlist(x) for x in playlists]
         return playlists
 
+    def get_playlist(self, id):
+        _result = self.ytmusic.get_playlist(id, limit=0)
+        return self._to_playlist(_result)
+
+    def add_playlist(self, name, description=""):
+        playlistId = self.ytmusic.create_playlist(name, description)
+        return self.get_playlist(playlistId)
+
+    def delete_playlist(self, playlist):
+        _result = self.ytmusic.delete_playlist(playlist.id)
+        logging.info(_result)
+        return _result
+
+    # songs
+
     def get_songs(self, playlist: api.Playlist):
-        results = self.ytmusic.get_playlist(
-            playlist.id,
-            limit=None,
-        )
+        results = self.ytmusic.get_playlist(playlist.id, limit=None)
         results = [self._to_song(x) for x in results["tracks"]]
         return results
 
     def find_song(self, name, author=None):
-
         results = self.ytmusic.search(
             f"{author} - {name}",
             filter="songs",
@@ -62,6 +72,11 @@ class Youtube(Engine):
         results = [self._to_song(x) for x in results]
         return results
 
+    def add_song_to_playlist(self, song: api.Song, playlist: api.Playlist):
+        self.ytmusic.add_playlist_items(playlist.id, [song.id])
+
+    # util
+
     def _to_song(self, x):
         author_str = ", ".join([a["name"] for a in x["artists"]])
         return api.Song(
@@ -69,4 +84,17 @@ class Youtube(Engine):
             author=author_str,
             id=x["videoId"],
             external_url=f"https://music.youtube.com/watch?v={x['videoId']}",
+        )
+
+    def _to_playlist(self, x):
+        _id = None
+        for tag in ["id", "playlistId"]:
+            if tag in x:
+                _id = x[tag]
+                break
+        assert _id
+        return api.Playlist(
+            name=x["title"],
+            id=_id,
+            external_url=f"https://music.youtube.com/playlist?list={_id}",
         )

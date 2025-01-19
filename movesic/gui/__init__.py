@@ -10,13 +10,13 @@ def index():
     widgets.show_index()
 
 
-@ui.page("/youtube")
+@ui.page("/settings")
 def youtube_page():
     widgets.show_header()
     if "youtube_app" in app.storage.general:
         values = app.storage.general["youtube_app"]
         yt = youtube.Youtube(
-            auth="oauth.json",
+            auth=app.storage.general["youtube"], # "oauth.json",
             client_id=values["client_id"],
             secret=values["secret"],
         )
@@ -24,10 +24,6 @@ def youtube_page():
     else:
         widgets.show_youtube_setup()
 
-
-@ui.page("/spotify")
-def spotify_page():
-    widgets.show_header()
     if "spotify_app" in app.storage.general:
         config = app.storage.general["spotify_app"]
         sp = spotify.Spotify(

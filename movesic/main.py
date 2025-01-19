@@ -13,6 +13,7 @@ def main():
     ui.run(
         native=True,
         reload=False,
+        dark=True,
         title="movesic",
         favicon="📻",
     )

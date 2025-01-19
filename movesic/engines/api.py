@@ -26,16 +26,33 @@ class Playlist:
 
 
 class Engine:
-    # from
-    @abc.abstractmethod
-    def info(self): ...
+    # user
 
     @abc.abstractmethod
-    def get_playlists(self): ...
+    def info(self) -> UserInfo | None: ...
+
+    # playlists
 
     @abc.abstractmethod
-    def get_songs(self, playlist): ...
+    def get_playlists(self) -> list[Playlist]: ...
 
-    # to
+
     @abc.abstractmethod
-    def find_song(self, name, author=None): ...
+    def get_playlist(self, id) -> Playlist: ...
+
+    @abc.abstractmethod
+    def add_playlist(self, name, description="") -> Playlist: ...
+
+    @abc.abstractmethod
+    def delete_playlist(self, playlist: Playlist): ...
+
+    # songs
+
+    @abc.abstractmethod
+    def get_songs(self, playlist) -> list[Song]: ...
+
+    @abc.abstractmethod
+    def find_song(self, name, author=None) -> list[Song]: ...
+
+    @abc.abstractmethod
+    def add_song_to_playlist(self, song, playlist): ...
