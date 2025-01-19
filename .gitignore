@@ -1,5 +1,17 @@
-.venv
+# python
+__pycache__/
+.venv/
+/dist
+/build
+/.coverage
+/.python-version
 
-headers_auth.json
+# macos
+.DS_Store
 
-*.txt
+# user
+/.vscode
+/.nicegui
+/.env
+/movesic.sqlite
+/movesic.sqlite-journal

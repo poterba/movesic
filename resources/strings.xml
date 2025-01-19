@@ -1,0 +1,12 @@
+<base>
+    <string id="spotify">You should create app and get some keys. Tick `Web API` checkbox.
+        | Option | Value |
+        | ------------- | ------------- |
+        | App name | *Anything* |
+        | App description | *Anything* |
+        | Redirect URIs | http://localhost:44444/ |
+        | Which API/SDKs are you planning to use? | Web API |</string>
+    <string id="youtube">You should create project on Dashboard.
+        After add OAuth key on Auth page.
+        Add yourself on Audience page to test users.</string>
+</base>

@@ -1,0 +1,54 @@
+on:
+  push:
+    tags:
+      - "v*.*.*"
+
+env:
+  PYTHON_VERSION: '3.11'
+
+permissions:
+  packages: write
+  contents: write
+
+jobs:
+  build-windows:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          cache: 'poetry'
+
+      - name: Add dist folder to exclusions
+        run: powershell -inputformat none -NonInteractive -Command Add-MpPreference -ExclusionPath "${{ github.workspace }}/dist"
+        if: ${{ always() }}
+
+      - name: Generate version
+        run: |
+          poetry self add poetry-git-version-plugin
+          poetry set-git-version
+
+      - name: Build EXE
+        run: |
+          poetry self add poetry-pyinstaller-plugin
+          poetry install -E exe
+          poetry build
+
+      # - uses: actions/upload-artifact@v3
+      #   with:
+      #     name: movesic
+      #     path: dist/pyinstaller/win_amd64/movesic.exe
+      #     if-no-files-found: error
+
+      - uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            dist/pyinstaller/win_amd64/movesic.exe
+          prerelease: true
+          make_latest: true
+
+      - name: Remove dist folder from exclusions
+        run: powershell -inputformat none -NonInteractive -Command Remove-MpPreference -ExclusionPath "${{ github.workspace }}/dist"
+        if: ${{ always() }}
