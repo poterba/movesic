@@ -4,8 +4,33 @@ freeze_support()
 # fmt: on
 
 import logging
-from nicegui import ui
-from movesic.gui.widgets import *  # noqa: F403
+from nicegui import app, ui
+from movesic import config, database
+from movesic.gui import widgets
+
+
+def movesic_init():
+    logging.info(f"Using storage: {config.MovesicConfig.STORAGE_PATH}")
+    database.init(config.MovesicConfig.DATABASE_URL)
+
+
+app.on_startup(movesic_init)
+
+
+@ui.page("/")
+async def index_page():
+    with ui.left_drawer(value=False) as drawer:
+        with ui.card().classes("w-full"):
+            ui.label("Applications")
+            await widgets.applications()
+        with ui.card().classes("w-full"):
+            ui.label("Credentials")
+            await widgets.credentials()
+
+    with ui.header():
+        ui.button(icon="settings", on_click=lambda: drawer.toggle())
+
+    await widgets.show_index()
 
 
 def main():
@@ -14,7 +39,7 @@ def main():
         native=True,
         reload=False,
         dark=True,
-        title="movesic",
+        title=f"MoveSIC {config.MovesicConfig.VERSION}",
         favicon="📻",
     )
 

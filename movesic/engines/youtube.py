@@ -2,6 +2,7 @@ import logging
 from ytmusicapi import YTMusic
 from ytmusicapi.auth.oauth import OAuthCredentials
 
+from movesic.database import model
 from movesic.engines import api
 from movesic.engines.api import Engine
 
@@ -9,19 +10,12 @@ from movesic.engines.api import Engine
 class Youtube(Engine):
     def __init__(
         self,
-        auth=None,
-        *,
-        client_id: str | None = None,
-        secret: str | None = None,
+        creds: model.Credentials,
+        app: model.Application
     ):
-        oauth_credentials = None
-        if client_id and secret:
-            oauth_credentials = OAuthCredentials(
-                client_id=client_id,
-                client_secret=secret,
-            )
+        oauth_credentials = OAuthCredentials(**app.data)
         self.ytmusic = YTMusic(
-            auth=auth,
+            auth=creds.data if creds else None,
             oauth_credentials=oauth_credentials,
         )
 

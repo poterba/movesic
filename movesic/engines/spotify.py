@@ -1,7 +1,10 @@
+import asyncio
+from datetime import datetime
 import spotipy
 from spotipy import CacheHandler
 from spotipy.oauth2 import SpotifyOAuth
 
+from movesic.database import crud, model
 from movesic.engines import api
 
 _SPOTIFY_SCOPES = [
@@ -12,34 +15,43 @@ _SPOTIFY_SCOPES = [
 ]
 
 
-class StorageCacheHandler(CacheHandler):
-    def __init__(self, storage):
+class DBCacheHandler(CacheHandler):
+    def __init__(self, cred: model.Credentials):
         super().__init__()
-        self.storage = storage
+        self.cred = cred
+
+    async def save_token_to_cache(self, token_info):
+        self.cred.data = token_info
+        asyncio.run_coroutine_threadsafe(self.save_to_db(), None)
 
     def get_cached_token(self):
-        if "spotify" in self.storage:
-            return self.storage["spotify"]
+        if self.cred:
+            return self.cred.data
         return None
 
-    def save_token_to_cache(self, token_info):
-        self.storage["spotify"] = token_info
-        return None
+    async def save_to_db(self):
+        if self.cred:
+            await crud.update_credentials(
+                self.cred.id,
+                data=self.cred.data,
+            )
+        else:
+            self.cred = await crud.create_credentials(
+                type=model.SERVICETYPE_ENUM.SPOTIFY,
+                date_created=datetime.now(),
+                data=self.cred.data,
+            )
 
 
 class Spotify(api.Engine):
-    def __init__(self, client_id, client_secret, cache_handler):
-        # auth_manager = SpotifyClientCredentials(client_id, client_secret)
+    def __init__(self, creds: model.Credentials, app: model.Application):
         auth_manager = SpotifyOAuth(
-            client_id=client_id,
-            client_secret=client_secret,
+            **app.data,
             redirect_uri="http://localhost:44444/",
             scope=",".join(_SPOTIFY_SCOPES),
-            # open_browser=False,
-            cache_handler=cache_handler,
+            cache_handler=DBCacheHandler(creds),
         )
         self.sp = spotipy.Spotify(auth_manager=auth_manager)
-        # self.auth_manager = SpotifyOAuth(client_id, client_secret, scope=scope)
 
     def info(self):
         info = self.sp.current_user()

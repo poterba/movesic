@@ -15,7 +15,7 @@ def youtube():
     return Youtube(
         "tests/oauth.json",
         client_id=YOUTUBE_CLIENT_ID,
-        secret=YOUTUBE_SECRET,
+        client_secret=YOUTUBE_SECRET,
     )
 
 
