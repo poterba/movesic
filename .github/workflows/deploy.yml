@@ -4,7 +4,7 @@ on:
       - "v*.*.*"
 
 env:
-  PYTHON_VERSION: '3.11'
+  PYTHON_VERSION: '3.12'
 
 permissions:
   packages: write
@@ -20,6 +20,12 @@ jobs:
         with:
           python-version: ${{ env.PYTHON_VERSION }}
           cache: 'poetry'
+      - name: Install poetry
+        uses: abatilo/actions-poetry@v4
+      - name: Setup a local virtual environment
+        run: |
+          poetry config virtualenvs.create true --local
+          poetry config virtualenvs.in-project true --local
 
       - name: Add dist folder to exclusions
         run: powershell -inputformat none -NonInteractive -Command Add-MpPreference -ExclusionPath "${{ github.workspace }}/dist"
