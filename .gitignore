@@ -12,5 +12,6 @@ __pycache__/
 # user
 /.vscode
 /.nicegui
-.env
-movesic.sqlite
+/.env
+/movesic.sqlite
+/movesic.sqlite-journal
