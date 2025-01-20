@@ -31,15 +31,9 @@ jobs:
       #   run: powershell -inputformat none -NonInteractive -Command Add-MpPreference -ExclusionPath "${{ github.workspace }}/dist"
       #   if: ${{ always() }}
 
-      - name: Generate version
-        run: |
-          poetry self add poetry-git-version-plugin
-          poetry set-git-version
-
       - name: Build EXE
         run: |
-          poetry self add poetry-pyinstaller-plugin
-          poetry install -E exe
+          poetry install
           poetry build
 
       # - uses: actions/upload-artifact@v3
