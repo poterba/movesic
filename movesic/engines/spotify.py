@@ -20,9 +20,10 @@ class DBCacheHandler(CacheHandler):
         super().__init__()
         self.cred = cred
 
-    async def save_token_to_cache(self, token_info):
+    def save_token_to_cache(self, token_info):
         self.cred.data = token_info
-        asyncio.run_coroutine_threadsafe(self.save_to_db(), None)
+        loop = asyncio.get_running_loop()
+        asyncio.run_coroutine_threadsafe(self.save_to_db(), loop)
 
     def get_cached_token(self):
         if self.cred:
