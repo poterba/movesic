@@ -1,7 +1,7 @@
 on:
   push:
-    tags:
-      - "v*.*.*"
+    # tags:
+    #   - "v*.*.*"
 
 env:
   PYTHON_VERSION: '3.12'
@@ -16,20 +16,20 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Install poetry
+        run: |
+          pipx install poetry
+          poetry config virtualenvs.create true --local
+          poetry config virtualenvs.in-project true --local
+
       - uses: actions/setup-python@v5
         with:
           python-version: ${{ env.PYTHON_VERSION }}
           cache: 'poetry'
-      - name: Install poetry
-        uses: abatilo/actions-poetry@v4
-      - name: Setup a local virtual environment
-        run: |
-          poetry config virtualenvs.create true --local
-          poetry config virtualenvs.in-project true --local
 
-      - name: Add dist folder to exclusions
-        run: powershell -inputformat none -NonInteractive -Command Add-MpPreference -ExclusionPath "${{ github.workspace }}/dist"
-        if: ${{ always() }}
+      # - name: Add dist folder to exclusions
+      #   run: powershell -inputformat none -NonInteractive -Command Add-MpPreference -ExclusionPath "${{ github.workspace }}/dist"
+      #   if: ${{ always() }}
 
       - name: Generate version
         run: |
@@ -55,6 +55,6 @@ jobs:
           prerelease: true
           make_latest: true
 
-      - name: Remove dist folder from exclusions
-        run: powershell -inputformat none -NonInteractive -Command Remove-MpPreference -ExclusionPath "${{ github.workspace }}/dist"
-        if: ${{ always() }}
+      # - name: Remove dist folder from exclusions
+      #   run: powershell -inputformat none -NonInteractive -Command Remove-MpPreference -ExclusionPath "${{ github.workspace }}/dist"
+      #   if: ${{ always() }}
