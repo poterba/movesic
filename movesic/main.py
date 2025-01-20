@@ -14,10 +14,8 @@ from movesic.gui import widgets
 
 def movesic_init():
     migrate = threading.Thread(
-        None,
-        run_migrations,
-        "run_migrations",
-        (config.MovesicConfig.DATABASE_URL,),
+        target=run_migrations,
+        args=(config.MovesicConfig.DATABASE_URL,),
     )
     migrate.start()
     migrate.join()

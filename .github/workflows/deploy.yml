@@ -19,16 +19,16 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Install poetry
-        run: |
-          pipx install poetry
-          poetry config virtualenvs.create true --local
-          poetry config virtualenvs.in-project true --local
-
       - uses: actions/setup-python@v5
         with:
           python-version: ${{ env.PYTHON_VERSION }}
           cache: 'poetry'
+
+      - name: Install poetry
+        run: |
+          pip install poetry
+          poetry config virtualenvs.create true --local
+          poetry config virtualenvs.in-project true --local
 
       # - name: Add dist folder to exclusions
       #   run: powershell -inputformat none -NonInteractive -Command Add-MpPreference -ExclusionPath "${{ github.workspace }}/dist"
