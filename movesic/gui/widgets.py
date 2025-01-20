@@ -2,7 +2,7 @@ from datetime import datetime
 import webbrowser
 from functools import partial
 
-from nicegui import ui, run
+from nicegui import ui
 
 from movesic import config
 from movesic.database import crud, model
@@ -15,17 +15,50 @@ _APP_LOGOS = {
 }
 
 
-@ui.refreshable
-def show_engine(engine: api.Engine | None = None):
-    def _open_playlist(p):
+class EnginePreview(ui.card):
+    def __init__(self, creds, *, align_items=None):
+        super().__init__(align_items=align_items)
+        self.creds = creds
+        self.engine: api.Engine | None = None
+        self.value = None
+        with self:
+            self._ui()
+
+    def _ui(self):
+        self.select = (
+            ui.select(self.creds, on_change=self._refresh_engine)
+            .classes("w-full")
+            .bind_value(self, "value")
+        )
+        self.show_engine()
+
+    def _to_engine(self, app, creds):
+        if app.type == model.SERVICETYPE_ENUM.YOUTUBE_MUSIC:
+            return youtube.Youtube(creds, app)
+        elif app.type == model.SERVICETYPE_ENUM.SPOTIFY:
+            return spotify.Spotify(creds, app)
+        else:
+            raise RuntimeError(f"Unknown service {creds.type}")
+
+    async def _refresh_engine(self, event):
+        creds: model.Credentials = event.value
+        app = await crud.get_application(creds.app_id)
+        if not app:
+            raise RuntimeError("Not found apps for these creds")
+        self.engine = self._to_engine(app, creds)
+        self.show_engine.refresh()
+
+    def _open_playlist(self, p):
         webbrowser.open(p.external_url)
 
-    with ui.card().classes("w-full"):
-        if not engine:
-            ui.label("Select saved credentials")
+    @ui.refreshable
+    def show_engine(self):
+        if not self.engine:
+            ui.label("Select some credentials")
             return
+
         with ui.list().classes("w-full"):
-            user_info = engine.info()
+            user_info = self.engine.info()
             with ui.item():
                 if user_info.avatar:
                     with ui.item_section().props("avatar"):
@@ -40,49 +73,26 @@ def show_engine(engine: api.Engine | None = None):
                             on_click=partial(webbrowser.open, user_info.external_url),
                         ).props("outline")
             p: api.Playlist
-            for p in engine.get_playlists():
-                with ui.item(on_click=partial(_open_playlist, p)):
+            for p in self.engine.get_playlists():
+                with ui.item(on_click=partial(self._open_playlist, p)):
                     with ui.item_section():
                         ui.item_label(p.name)
                         ui.item_label(p.id).props("caption")
 
 
-
 async def show_index():
     _creds = await crud.get_credentials()
     apps = await crud.get_application()
-    creds = {}
+    creds_to_apps = {}
     for cred in _creds:
         app = await crud.get_application(cred.app_id)
-        creds[cred] = app.type.name
-    items = {"left": None, "right": None}
-
-    def _to_engine(app, creds):
-        if app.type == model.SERVICETYPE_ENUM.YOUTUBE_MUSIC:
-            return youtube.Youtube(creds, app)
-        elif app.type == model.SERVICETYPE_ENUM.SPOTIFY:
-            return spotify.Spotify(creds, app)
-        else:
-            raise RuntimeError(f"Unknown service {creds.type}")
-
-    async def _refresh_engine(func, event):
-        creds: model.Credentials = event.value
-        app = await crud.get_application(creds.app_id)
-        if not app:
-            raise RuntimeError("Not found apps for these creds")
-        await run.io_bound(func.refresh, _to_engine(app, creds))
+        creds_to_apps[cred] = f"{app.type.name} {cred.date_created}"
 
     with ui.splitter(limits=(50, 50)).classes("w-full") as _splitter:
         with _splitter.before:
-            left_sel = ui.select(creds).classes("w-full").bind_value(items, "left")
-            left_engine = show_engine
-            left_engine()
-            left_sel.on_value_change(partial(_refresh_engine, left_engine))
+            left_engine = EnginePreview(creds_to_apps).classes("w-full")
         with _splitter.after:
-            right_sel = ui.select(creds).classes("w-full").bind_value(items, "right")
-            right_engine = show_engine
-            right_engine()
-            right_sel.on_value_change(partial(_refresh_engine, right_engine))
+            right_engine = EnginePreview(creds_to_apps).classes("w-full")
     ui.button("RUN").classes("w-full").bind_enabled_from(
         locals(),
         "items",
@@ -140,5 +150,5 @@ async def credentials():
                 with ui.item_section().props("avatar"):
                     ui.image(config.MovesicConfig.resource(_APP_LOGOS[app.type]))
                 with ui.item_section():
-                    ui.item_label(cred.date_created)
+                    ui.item_label(f"{cred.date_created}")
         ui.button(icon="add", on_click=_edit_cred).classes("w-full")
