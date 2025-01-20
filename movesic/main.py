@@ -1,5 +1,8 @@
 # fmt: off
 from multiprocessing import freeze_support
+import threading
+
+from movesic.database.migrations import run_migrations
 freeze_support()
 # fmt: on
 
@@ -10,6 +13,15 @@ from movesic.gui import widgets
 
 
 def movesic_init():
+    migrate = threading.Thread(
+        None,
+        run_migrations,
+        "run_migrations",
+        (config.MovesicConfig.DATABASE_URL,),
+    )
+    migrate.start()
+    migrate.join()
+
     logging.info(f"Using storage: {config.MovesicConfig.STORAGE_PATH}")
     database.init(config.MovesicConfig.DATABASE_URL)
 
