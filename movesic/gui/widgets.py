@@ -21,7 +21,7 @@ class EnginePreview(ui.card):
         self.creds = creds
         self.engine: api.Engine | None = None
         self.value = None
-        with self:
+        with self, ui.scroll_area():
             self._ui()
 
     def _ui(self):
