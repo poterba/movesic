@@ -12,6 +12,7 @@ class MovesicConfig:
         "sqlite+aiosqlite:///movesic.sqlite",
     )
     STORAGE_PATH = os.getenv("MOVESIC_STORAGE_PATH", ".movesic")
+    LOGGING_LEVEL = os.getenv("MOVESIC_LOGGING_LEVEL", "INFO")
 
     @staticmethod
     def resource(relative_path):

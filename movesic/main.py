@@ -44,7 +44,7 @@ async def index_page():
 
 
 def main():
-    logging.basicConfig(level=logging.DEBUG)
+    logging.basicConfig(level=config.MovesicConfig.LOGGING_LEVEL)
     ui.run(
         native=True,
         reload=False,
