@@ -13,7 +13,7 @@ movesic = "movesic.main:main"
 [tool.poetry.dependencies]
 python = "^3.9,<3.13"
 # ui
-nicegui = "^1.4.27"
+nicegui = "^2.10.0"
 pywebview = "^5.1"
 # api
 ytmusicapi = "^1.7.3"
