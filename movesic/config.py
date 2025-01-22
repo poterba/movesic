@@ -13,6 +13,12 @@ class MovesicConfig:
     )
     STORAGE_PATH = os.getenv("MOVESIC_STORAGE_PATH", ".movesic")
     LOGGING_LEVEL = os.getenv("MOVESIC_LOGGING_LEVEL", "INFO")
+    try:
+        import webview
+
+        NATIVE_APP = True
+    except ModuleNotFoundError:
+        NATIVE_APP = False
 
     @staticmethod
     def resource(relative_path):

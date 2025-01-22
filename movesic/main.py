@@ -29,6 +29,10 @@ app.on_startup(movesic_init)
 
 @ui.page("/")
 async def index_page():
+    # the queries below are used to expand the contend down to the footer (content can then use flex-grow to expand)
+    ui.query('.q-page').classes('flex')
+    ui.query('.nicegui-content').classes('w-full')
+
     with ui.left_drawer(value=False) as drawer:
         with ui.card().classes("w-full"):
             ui.label("Applications")
@@ -46,7 +50,7 @@ async def index_page():
 def main():
     logging.basicConfig(level=config.MovesicConfig.LOGGING_LEVEL)
     ui.run(
-        native=True,
+        native=config.MovesicConfig.NATIVE_APP,
         reload=False,
         dark=True,
         title=f"MoveSIC {config.MovesicConfig.VERSION}",
