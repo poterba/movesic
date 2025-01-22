@@ -12,10 +12,12 @@ class UserInfo:
 
 @dataclass
 class Song:
-    name: str
-    author: str
     id: str
     external_url: str
+    name: str
+    author: str
+    album: str
+    cover: bytes | str
 
 
 @dataclass
@@ -23,6 +25,9 @@ class Playlist:
     name: str
     id: str
     external_url: str
+
+    def __hash__(self):
+        return hash(self.id)
 
 
 class Engine:
@@ -36,7 +41,6 @@ class Engine:
     @abc.abstractmethod
     def get_playlists(self) -> list[Playlist]: ...
 
-
     @abc.abstractmethod
     def get_playlist(self, id) -> Playlist: ...
 
@@ -49,7 +53,7 @@ class Engine:
     # songs
 
     @abc.abstractmethod
-    def get_songs(self, playlist) -> list[Song]: ...
+    def get_songs(self, playlist: Playlist) -> list[Song]: ...
 
     @abc.abstractmethod
     def find_song(self, name, author=None) -> list[Song]: ...

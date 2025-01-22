@@ -104,10 +104,12 @@ class Spotify(api.Engine):
     def _to_song(self, track):
         authors = ", ".join([x["name"] for x in track["artists"]])
         return api.Song(
+            id=track["id"],
+            external_url=track["external_urls"]["spotify"],
             name=track["name"],
             author=authors,
-            id=track["id"],
-            external_url=track["href"],
+            album=track["album"]["name"],
+            cover=track["album"]["images"][0]["url"],
         )
 
     def _to_playlist(self, item):

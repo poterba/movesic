@@ -16,21 +16,48 @@ _APP_LOGOS = {
 
 
 class EnginePreview(ui.card):
-    def __init__(self, creds, *, align_items=None):
+    def __init__(self, creds, is_dest: bool, *, align_items=None):
         super().__init__(align_items=align_items)
-        self.creds = creds
+        self.is_dest = is_dest
+        self.creds = None
+        self.playlist = None
         self.engine: api.Engine | None = None
-        self.value = None
-        with self, ui.scroll_area():
-            self._ui()
+        with self:
+            self._ui(creds)
 
-    def _ui(self):
-        self.select = (
-            ui.select(self.creds, on_change=self._refresh_engine)
+    def _ui(self, creds):
+        self.creds_select = (
+            ui.select(
+                creds,
+                on_change=self._on_engine_change,
+            )
             .classes("w-full")
-            .bind_value(self, "value")
+            .bind_value(self, "creds")
         )
-        self.show_engine()
+        self.show_user_info()
+        self.playlist_select = (
+            ui.select({}, on_change=self._on_playlist_change)
+            .classes("w-full")
+            .bind_value(self, "playlist")
+            .bind_visibility_from(self, "engine")
+        )
+        self.show_playlist()
+
+    async def _on_engine_change(self, event):
+        creds: model.Credentials = event.value
+        app = await crud.get_application(creds.app_id)
+        if not app:
+            raise RuntimeError("Not found apps for these creds")
+        self.engine = self._to_engine(app, creds)
+        playlists = self.engine.get_playlists()
+        playlists = {x: x.name for x in playlists}
+        if self.is_dest:
+            playlists[None] = "Create new playlist"
+        self.show_user_info.refresh()
+
+        self.playlist = None
+        self.playlist_select.set_options(playlists)
+        self.show_playlist.refresh()
 
     def _to_engine(self, app, creds):
         if app.type == model.SERVICETYPE_ENUM.YOUTUBE_MUSIC:
@@ -40,44 +67,47 @@ class EnginePreview(ui.card):
         else:
             raise RuntimeError(f"Unknown service {creds.type}")
 
-    async def _refresh_engine(self, event):
-        creds: model.Credentials = event.value
-        app = await crud.get_application(creds.app_id)
-        if not app:
-            raise RuntimeError("Not found apps for these creds")
-        self.engine = self._to_engine(app, creds)
-        self.show_engine.refresh()
-
-    def _open_playlist(self, p):
-        webbrowser.open(p.external_url)
+    async def _on_playlist_change(self, event):
+        self.show_playlist.refresh()
 
     @ui.refreshable
-    def show_engine(self):
+    def show_user_info(self):
         if not self.engine:
             ui.label("Select some credentials")
             return
+        user_info = self.engine.info()
+        with ui.item().classes("w-full") as user_item:
+            if user_info.avatar:
+                with ui.item_section().props("avatar"):
+                    ui.image(user_info.avatar)
+            with ui.item_section():
+                ui.item_label(user_info.name)
+                ui.item_label(user_info.id).props("caption")
+        if user_info.external_url:
+            user_item.on_click(partial(webbrowser.open, user_info.external_url))
 
-        with ui.list().classes("w-full"):
-            user_info = self.engine.info()
-            with ui.item():
-                if user_info.avatar:
-                    with ui.item_section().props("avatar"):
-                        ui.image(user_info.avatar)
-                with ui.item_section():
-                    ui.item_label(user_info.name)
-                    ui.item_label(user_info.id).props("caption")
-                if user_info.external_url:
-                    with ui.item_section().props("side"):
-                        ui.button(
-                            icon="link",
-                            on_click=partial(webbrowser.open, user_info.external_url),
-                        ).props("outline")
-            p: api.Playlist
-            for p in self.engine.get_playlists():
-                with ui.item(on_click=partial(self._open_playlist, p)):
+    @ui.refreshable
+    def show_playlist(self):
+        if not self.playlist:
+            ui.label("Select some playlist")
+            return
+
+        songs = self.engine.get_songs(self.playlist)
+        ui.label(f"{len(songs)} songs")
+        with ui.scroll_area().classes("flex-grow"), ui.list().classes("w-full"):
+            song: api.Song
+            for song in songs:
+                with ui.item().classes("w-full") as playlist_item:
+                    if song.cover:
+                        with ui.item_section().props("avatar"):
+                            ui.image(song.cover)
                     with ui.item_section():
-                        ui.item_label(p.name)
-                        ui.item_label(p.id).props("caption")
+                        ui.item_label(song.name)
+                        ui.item_label(song.author).props("caption")
+                if song.external_url:
+                    playlist_item.on_click(
+                        partial(webbrowser.open, song.external_url),
+                    )
 
 
 async def show_index():
@@ -88,15 +118,24 @@ async def show_index():
         app = await crud.get_application(cred.app_id)
         creds_to_apps[cred] = f"{app.type.name} {cred.date_created}"
 
-    with ui.splitter(limits=(50, 50)).classes("w-full") as _splitter:
+    def _start_move():
+        pass
+
+    with ui.splitter(limits=(50, 50)).classes("w-full flex-grow") as _splitter:
         with _splitter.before:
-            left_engine = EnginePreview(creds_to_apps).classes("w-full")
+            left_engine = EnginePreview(creds_to_apps, False).classes(
+                "w-full flex-grow"
+            )
         with _splitter.after:
-            right_engine = EnginePreview(creds_to_apps).classes("w-full")
-    ui.button("RUN").classes("w-full").bind_enabled_from(
+            right_engine = EnginePreview(creds_to_apps, True).classes(
+                "w-full flex-grow"
+            )
+    ui.button("RUN", on_click=_start_move).classes("w-full").bind_enabled_from(
         locals(),
-        "items",
-        lambda x: None not in x.values(),
+        "left_engine",
+        lambda x: x.playlist
+        and right_engine.creds
+        and right_engine.creds != left_engine.creds,
     )
     with ui.row(wrap=False).classes("w-full"):
         ui.list()
