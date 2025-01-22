@@ -32,6 +32,7 @@ jobs:
       - name: Install poetry
         run: |
           pip install poetry
+          poetry self add poetry-pyinstaller-plugin
 
       # - name: Add dist folder to exclusions
       #   run: powershell -inputformat none -NonInteractive -Command Add-MpPreference -ExclusionPath "${{ github.workspace }}/dist"
