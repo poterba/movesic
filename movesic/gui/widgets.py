@@ -2,7 +2,7 @@ from datetime import datetime
 import webbrowser
 from functools import partial
 
-from nicegui import ui, run
+from nicegui import ui
 
 from movesic import config
 from movesic.database import crud, model
@@ -15,49 +15,51 @@ _APP_LOGOS = {
 }
 
 
-@ui.refreshable
-def show_engine(engine: api.Engine | None = None):
-    def _open_playlist(p):
-        webbrowser.open(p.external_url)
+class EnginePreview(ui.card):
+    def __init__(self, creds, is_dest: bool, *, align_items=None):
+        super().__init__(align_items=align_items)
+        self.is_dest = is_dest
+        self.creds = None
+        self.playlist = None
+        self.engine: api.Engine | None = None
+        with self:
+            self._ui(creds)
 
-    with ui.card().classes("w-full"):
-        if not engine:
-            ui.label("Select saved credentials")
-            return
-        with ui.list().classes("w-full"):
-            user_info = engine.info()
-            with ui.item():
-                if user_info.avatar:
-                    with ui.item_section().props("avatar"):
-                        ui.image(user_info.avatar)
-                with ui.item_section():
-                    ui.item_label(user_info.name)
-                    ui.item_label(user_info.id).props("caption")
-                if user_info.external_url:
-                    with ui.item_section().props("side"):
-                        ui.button(
-                            icon="link",
-                            on_click=partial(webbrowser.open, user_info.external_url),
-                        ).props("outline")
-            p: api.Playlist
-            for p in engine.get_playlists():
-                with ui.item(on_click=partial(_open_playlist, p)):
-                    with ui.item_section():
-                        ui.item_label(p.name)
-                        ui.item_label(p.id).props("caption")
+    def _ui(self, creds):
+        self.creds_select = (
+            ui.select(
+                creds,
+                on_change=self._on_engine_change,
+            )
+            .classes("w-full")
+            .bind_value(self, "creds")
+        )
+        self.show_user_info()
+        self.playlist_select = (
+            ui.select({}, on_change=self._on_playlist_change)
+            .classes("w-full")
+            .bind_value(self, "playlist")
+            .bind_visibility_from(self, "engine")
+        )
+        self.show_playlist()
 
+    async def _on_engine_change(self, event):
+        creds: model.Credentials = event.value
+        app = await crud.get_application(creds.app_id)
+        if not app:
+            raise RuntimeError("Not found apps for these creds")
+        self.engine = self._to_engine(app, creds)
+        playlists = self.engine.get_playlists()
+        playlists = {x: x.name for x in playlists}
+        if self.is_dest:
+            playlists[None] = "Create new playlist"
+        self.show_user_info.refresh()
 
+        self.playlist = None
+        self.playlist_select.set_options(playlists)
+        self.show_playlist.refresh()
 
-async def show_index():
-    _creds = await crud.get_credentials()
-    apps = await crud.get_application()
-    creds = {}
-    for cred in _creds:
-        app = await crud.get_application(cred.app_id)
-        creds[cred] = app.type.name
-    items = {"left": None, "right": None}
-
-    def _to_engine(app, creds):
+    def _to_engine(self, app, creds):
         if app.type == model.SERVICETYPE_ENUM.YOUTUBE_MUSIC:
             return youtube.Youtube(creds, app)
         elif app.type == model.SERVICETYPE_ENUM.SPOTIFY:
@@ -65,28 +67,75 @@ async def show_index():
         else:
             raise RuntimeError(f"Unknown service {creds.type}")
 
-    async def _refresh_engine(func, event):
-        creds: model.Credentials = event.value
-        app = await crud.get_application(creds.app_id)
-        if not app:
-            raise RuntimeError("Not found apps for these creds")
-        await run.io_bound(func.refresh, _to_engine(app, creds))
+    async def _on_playlist_change(self, event):
+        self.show_playlist.refresh()
 
-    with ui.splitter(limits=(50, 50)).classes("w-full") as _splitter:
+    @ui.refreshable
+    def show_user_info(self):
+        if not self.engine:
+            ui.label("Select some credentials")
+            return
+        user_info = self.engine.info()
+        with ui.item().classes("w-full") as user_item:
+            if user_info.avatar:
+                with ui.item_section().props("avatar"):
+                    ui.image(user_info.avatar)
+            with ui.item_section():
+                ui.item_label(user_info.name)
+                ui.item_label(user_info.id).props("caption")
+        if user_info.external_url:
+            user_item.on_click(partial(webbrowser.open, user_info.external_url))
+
+    @ui.refreshable
+    def show_playlist(self):
+        if not self.playlist:
+            ui.label("Select some playlist")
+            return
+
+        songs = self.engine.get_songs(self.playlist)
+        ui.label(f"{len(songs)} songs")
+        with ui.scroll_area().classes("flex-grow"), ui.list().classes("w-full"):
+            song: api.Song
+            for song in songs:
+                with ui.item().classes("w-full") as playlist_item:
+                    if song.cover:
+                        with ui.item_section().props("avatar"):
+                            ui.image(song.cover)
+                    with ui.item_section():
+                        ui.item_label(song.name)
+                        ui.item_label(song.author).props("caption")
+                if song.external_url:
+                    playlist_item.on_click(
+                        partial(webbrowser.open, song.external_url),
+                    )
+
+
+async def show_index():
+    _creds = await crud.get_credentials()
+    apps = await crud.get_application()
+    creds_to_apps = {}
+    for cred in _creds:
+        app = await crud.get_application(cred.app_id)
+        creds_to_apps[cred] = f"{app.type.name} {cred.date_created}"
+
+    def _start_move():
+        pass
+
+    with ui.splitter(limits=(50, 50)).classes("w-full flex-grow") as _splitter:
         with _splitter.before:
-            left_sel = ui.select(creds).classes("w-full").bind_value(items, "left")
-            left_engine = show_engine
-            left_engine()
-            left_sel.on_value_change(partial(_refresh_engine, left_engine))
+            left_engine = EnginePreview(creds_to_apps, False).classes(
+                "w-full flex-grow"
+            )
         with _splitter.after:
-            right_sel = ui.select(creds).classes("w-full").bind_value(items, "right")
-            right_engine = show_engine
-            right_engine()
-            right_sel.on_value_change(partial(_refresh_engine, right_engine))
-    ui.button("RUN").classes("w-full").bind_enabled_from(
+            right_engine = EnginePreview(creds_to_apps, True).classes(
+                "w-full flex-grow"
+            )
+    ui.button("RUN", on_click=_start_move).classes("w-full").bind_enabled_from(
         locals(),
-        "items",
-        lambda x: None not in x.values(),
+        "left_engine",
+        lambda x: x.playlist
+        and right_engine.creds
+        and right_engine.creds != left_engine.creds,
     )
     with ui.row(wrap=False).classes("w-full"):
         ui.list()
@@ -140,5 +189,5 @@ async def credentials():
                 with ui.item_section().props("avatar"):
                     ui.image(config.MovesicConfig.resource(_APP_LOGOS[app.type]))
                 with ui.item_section():
-                    ui.item_label(cred.date_created)
+                    ui.item_label(f"{cred.date_created}")
         ui.button(icon="add", on_click=_edit_cred).classes("w-full")

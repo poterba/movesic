@@ -99,21 +99,22 @@ class EditCredentialsDialog(ui.dialog):
         apps = {}
         for a in self.apps:
             apps[a.id] = a.type.name
-        ui.select(apps).bind_value(self.creds, "app_id")
-        self.editor = (
-            ui.textarea(
-                {"content": self.creds.data},
-            )
-            .bind_value(
-                self.creds,
-                "data",
-                forward=lambda x: json.loads(x.replace("'", "\"")),
-                backward=lambda x: str(x),
-            )
-            .props(_props)
+        ui.select(apps).bind_value(self.creds, "app_id").props(_props)
+        self.editor = ui.json_editor(
+            {
+                "content": {"json": self.creds.data},
+                "readOnly": bool(self.creds.id),
+            },
+            on_change=self._on_edit,
         )
         if not self.creds.id:
             ui.button(icon="save", on_click=lambda: self.submit(self.creds))
 
     def _on_edit(self, x):
-        self.creds.data = x
+        if x.errors:
+            self.creds.data = {}
+        else:
+            if "text" in x.content:
+                self.creds.data = json.loads(x.content["text"])
+            elif "json" in x.content:
+                self.creds.data = x.content["json"]

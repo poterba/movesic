@@ -11,7 +11,7 @@ class Youtube(Engine):
     def __init__(
         self,
         creds: model.Credentials,
-        app: model.Application
+        app: model.Application,
     ):
         oauth_credentials = OAuthCredentials(**app.data)
         self.ytmusic = YTMusic(
@@ -73,11 +73,17 @@ class Youtube(Engine):
 
     def _to_song(self, x):
         author_str = ", ".join([a["name"] for a in x["artists"]])
+        album_str = None
+        if "album" in x and x["album"]:
+            album_str = x["album"]["name"]
+
         return api.Song(
-            name=x["title"],
-            author=author_str,
             id=x["videoId"],
             external_url=f"https://music.youtube.com/watch?v={x['videoId']}",
+            name=x["title"],
+            author=author_str,
+            album=album_str,
+            cover=x["thumbnails"][-1]["url"],
         )
 
     def _to_playlist(self, x):

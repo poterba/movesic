@@ -1,7 +1,10 @@
 on:
   push:
+    branches:
+      - "main"
     tags:
       - "v*.*.*"
+  workflow_dispatch:
 
 env:
   PYTHON_VERSION: '3.12'
@@ -11,50 +14,46 @@ permissions:
   contents: write
 
 jobs:
-  build-windows:
-    runs-on: windows-latest
+  build:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [
+          ubuntu-latest,
+          windows-latest,
+          macos-latest
+        ]
     steps:
       - uses: actions/checkout@v4
 
       - uses: actions/setup-python@v5
         with:
           python-version: ${{ env.PYTHON_VERSION }}
-          cache: 'poetry'
+          # cache: 'poetry'
+
       - name: Install poetry
-        uses: abatilo/actions-poetry@v4
-      - name: Setup a local virtual environment
         run: |
-          poetry config virtualenvs.create true --local
-          poetry config virtualenvs.in-project true --local
-
-      - name: Add dist folder to exclusions
-        run: powershell -inputformat none -NonInteractive -Command Add-MpPreference -ExclusionPath "${{ github.workspace }}/dist"
-        if: ${{ always() }}
-
-      - name: Generate version
-        run: |
-          poetry self add poetry-git-version-plugin
-          poetry set-git-version
+          pip install poetry
+          poetry self add poetry-pyinstaller-plugin
+          poetry self add poetry-dynamic-versioning[plugin]
+          poetry self add poethepoet[poetry-plugin]
 
       - name: Build EXE
         run: |
-          poetry self add poetry-pyinstaller-plugin
           poetry install -E exe
-          poetry build
+          poetry build --format pyinstaller
 
-      # - uses: actions/upload-artifact@v3
-      #   with:
-      #     name: movesic
-      #     path: dist/pyinstaller/win_amd64/movesic.exe
-      #     if-no-files-found: error
+      - uses: actions/upload-artifact@v4
+        if: "!startsWith(github.ref, 'refs/tags/')"
+        with:
+          name: movesic-${{ matrix.os }}
+          path: dist/pyinstaller/*
+          if-no-files-found: error
 
       - uses: softprops/action-gh-release@v2
+        if: startsWith(github.ref, 'refs/tags/')
         with:
           files: |
-            dist/pyinstaller/win_amd64/movesic.exe
+            dist/pyinstaller/*
           prerelease: true
           make_latest: true
-
-      - name: Remove dist folder from exclusions
-        run: powershell -inputformat none -NonInteractive -Command Remove-MpPreference -ExclusionPath "${{ github.workspace }}/dist"
-        if: ${{ always() }}
