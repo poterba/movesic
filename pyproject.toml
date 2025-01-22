@@ -52,6 +52,7 @@ style = "semver"
 version = "6.7.0"
 disable-upx = true
 exclude-include = true
+use-poetry-install = true
 
 [tool.poetry-pyinstaller-plugin.scripts]
 movesic = { source = "movesic/main.py", type = "onefile", bundle = true, windowed = true, hiddenimport = "aiosqlite" }
