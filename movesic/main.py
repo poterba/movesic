@@ -52,6 +52,7 @@ def main():
     ui.run(
         native=config.MovesicConfig.NATIVE_APP,
         reload=False,
+        show=False,
         dark=True,
         title=f"MoveSIC {config.MovesicConfig.VERSION}",
         favicon="📻",
