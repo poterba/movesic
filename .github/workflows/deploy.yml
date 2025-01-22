@@ -18,7 +18,7 @@ jobs:
         os: [
           ubuntu-latest,
           # TODO: fix windows build, fails with `ValueError: path is on mount 'C:', start on mount 'D:'`
-          # windows-latest,
+          windows-latest,
           macos-latest
         ]
     steps:
@@ -32,8 +32,6 @@ jobs:
       - name: Install poetry
         run: |
           pip install poetry
-          poetry config virtualenvs.create true --local
-          poetry config virtualenvs.in-project true --local
 
       # - name: Add dist folder to exclusions
       #   run: powershell -inputformat none -NonInteractive -Command Add-MpPreference -ExclusionPath "${{ github.workspace }}/dist"
@@ -41,7 +39,7 @@ jobs:
 
       - name: Build EXE
         run: |
-          poetry install
+          poetry install -E exe
           poetry build --format pyinstaller
 
       - uses: actions/upload-artifact@v4
