@@ -33,6 +33,8 @@ jobs:
         run: |
           pip install poetry
           poetry self add poetry-pyinstaller-plugin
+          poetry self add poetry-dynamic-versioning[plugin]
+          poetry self add poethepoet[poetry-plugin]
 
       # - name: Add dist folder to exclusions
       #   run: powershell -inputformat none -NonInteractive -Command Add-MpPreference -ExclusionPath "${{ github.workspace }}/dist"
