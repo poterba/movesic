@@ -1,8 +1,14 @@
+import asyncio
+from functools import partial
 import json
-from nicegui import ui
+import logging
+from typing import Optional
+import webbrowser
+from nicegui import run, ui
 
 
 from movesic.database import model
+from movesic.engines import api
 
 _SPOTIFY_APP_MD = """
 You should create app and get some keys. Tick `Web API` checkbox.
@@ -18,6 +24,8 @@ _YOUTUBE_APP_MD = """
 You should create project on Dashboard. After add OAuth key on Auth page.
 Add yourself on Audience page to test users.
 """
+
+_PLAYLIST_DESCRIPTION = "Imported with MoveSIC"
 
 
 class EditApplicationDialog(ui.dialog):
@@ -118,3 +126,77 @@ class EditCredentialsDialog(ui.dialog):
                 self.creds.data = json.loads(x.content["text"])
             elif "json" in x.content:
                 self.creds.data = x.content["json"]
+
+
+class MoveDialog(ui.dialog):
+    def __init__(
+        self,
+        src: api.Engine,
+        src_pl: api.Playlist,
+        dest: api.Engine,
+        dest_pl: api.Playlist,
+        *,
+        value=False,
+    ):
+        super().__init__(value=value)
+        self.src = src
+        self.src_pl = src_pl
+        self.dest = dest
+        self.dest_pl = dest_pl
+        with self, ui.card().classes("w-full"):
+            self._ui()
+
+    def _ui(self):
+        def _playlist(pl: api.Playlist | None):
+            if not pl:
+                return
+
+            with ui.item().classes("w-full") as playlist_item:
+                with ui.item_section():
+                    ui.item_label(pl.name)
+            if pl.external_url:
+                playlist_item.on_click(partial(webbrowser.open, pl.external_url))
+
+        with ui.row(wrap=False).classes("w-full"):
+            _playlist(self.src_pl)
+            _playlist(self.dest_pl)
+        self.progress_bar = ui.linear_progress(show_value=False)
+        self._left_song()
+        # TODO: right
+
+    def open(self):
+        super().open()
+        loop = asyncio.get_running_loop()
+        self.future = loop.create_task(run.io_bound(self._move))
+        asyncio.ensure_future(self.future)
+
+    def close(self):
+        super().close()
+        self.future.cancel()
+        self.submit(False)
+
+    @ui.refreshable_method
+    def _left_song(self, song: Optional[api.Song] = None):
+        if not song:
+            return
+        self.left_song = ui.card(align_items="stretch")
+        with self.left_song:
+            if song.cover:
+                ui.image(song.cover)
+            ui.label(song.name)
+            ui.label(f"{song.author} - {song.album}")
+
+    def _move(self):
+        if not self.dest_pl:
+            self.dest_pl = self.dest.add_playlist(self.src_pl.name, _PLAYLIST_DESCRIPTION)
+            logging.info(f"added playlist {self.dest_pl.name} {self.dest_pl.id}")
+
+        songs = self.src.get_songs(self.src_pl)
+        for index, s in enumerate(songs):
+            self._left_song.refresh(s)
+            result = self.dest.find_song(s.name, s.author)
+            result = result[0]
+            self.dest.add_song_to_playlist(song=result, playlist=self.dest_pl)
+            logging.info(f"added song {result.author} - {result.name}")
+            self.progress_bar.value = index / len(songs)
+        self.submit(True)

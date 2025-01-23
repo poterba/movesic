@@ -122,9 +122,6 @@ async def show_index():
         app = _apps[cred.app_id]
         creds_to_apps[cred] = f"{app.type.name} {cred.date_created}"
 
-    def _start_move():
-        pass
-
     with ui.splitter(limits=(50, 50)).classes("w-full flex-grow") as _splitter:
         with _splitter.before:
             left_engine = EnginePreview(creds_to_apps, False).classes(
@@ -134,6 +131,17 @@ async def show_index():
             right_engine = EnginePreview(creds_to_apps, True).classes(
                 "w-full flex-grow"
             )
+
+    async def _start_move():
+        result = await dialogs.MoveDialog(
+            left_engine.engine,
+            left_engine.playlist,
+            right_engine.engine,
+            right_engine.playlist,
+        )
+        if result:
+            ui.notify("Successfully moved!")
+
     ui.button("RUN", on_click=_start_move).classes("w-full").bind_enabled_from(
         locals(),
         "left_engine",
