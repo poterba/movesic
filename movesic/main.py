@@ -1,14 +1,15 @@
 # fmt: off
 from multiprocessing import freeze_support
-import threading
-
-from movesic.database.migrations import run_migrations
 freeze_support()
 # fmt: on
 
+from logging.handlers import RotatingFileHandler
+import sys
+import threading
 import logging
 from nicegui import app, ui
 from movesic import config, database
+from movesic.database.migrations import run_migrations
 from movesic.gui import widgets
 
 
@@ -30,8 +31,8 @@ app.on_startup(movesic_init)
 @ui.page("/")
 async def index_page():
     # the queries below are used to expand the contend down to the footer (content can then use flex-grow to expand)
-    ui.query('.q-page').classes('flex')
-    ui.query('.nicegui-content').classes('w-full')
+    ui.query(".q-page").classes("flex")
+    ui.query(".nicegui-content").classes("w-full")
 
     with ui.left_drawer(value=False) as drawer:
         with ui.card().classes("w-full"):
@@ -48,7 +49,21 @@ async def index_page():
 
 
 def main():
-    logging.basicConfig(level=config.MovesicConfig.LOGGING_LEVEL)
+    logging_handlers = [
+        logging.StreamHandler(sys.stdout),
+    ]
+    if config.MovesicConfig.NATIVE_APP:
+        logging_handlers.append(
+            RotatingFileHandler(
+                "movesic.log",
+                maxBytes=1024 * 1024,
+                backupCount=3,
+            )
+        )
+    logging.basicConfig(
+        level=config.MovesicConfig.LOGGING_LEVEL,
+        handlers=logging_handlers,
+    )
     ui.run(
         native=config.MovesicConfig.NATIVE_APP,
         reload=False,
