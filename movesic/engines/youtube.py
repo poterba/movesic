@@ -25,8 +25,7 @@ class Youtube(Engine):
             name=info["accountName"],
             avatar=info["accountPhotoUrl"],
             id=info["channelHandle"],
-            # TODO
-            external_url=None,
+            external_url=f"https://www.youtube.com/{info['channelHandle']}",
         )
 
     # playlists

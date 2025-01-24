@@ -79,10 +79,12 @@ class Spotify(api.Engine):
         _result = self.sp.user_playlist_create(
             _user["id"],
             name=name,
-            public=False,
+            public=True,
             description=description,
         )
-        return self._to_playlist(_result)
+        result = self._to_playlist(_result)
+        self.sp.current_user_follow_playlist(result.id)
+        return result
 
     def delete_playlist(self, playlist: api.Playlist):
         return self.sp.current_user_unfollow_playlist(playlist.id)
@@ -97,6 +99,10 @@ class Spotify(api.Engine):
     def find_song(self, name, author=None):
         query_result = self.sp.search(f"{author} {name}")
         result = [self._to_song(x) for x in query_result["tracks"]["items"]]
+        return result
+
+    def add_song_to_playlist(self, song: api.Song, playlist: api.Playlist):
+        result = self.sp.playlist_add_items(playlist.id, [song.id])
         return result
 
     # util
