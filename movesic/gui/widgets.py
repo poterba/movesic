@@ -103,7 +103,9 @@ class EnginePreview(ui.card):
                             ui.image(song.cover)
                     with ui.item_section():
                         ui.item_label(song.name)
-                        ui.item_label(song.author).props("caption")
+                        ui.item_label(song.album).props("caption")
+                    with ui.item_section():
+                        ui.item_label(song.author)
                 if song.external_url:
                     playlist_item.on_click(
                         partial(webbrowser.open, song.external_url),
@@ -112,14 +114,13 @@ class EnginePreview(ui.card):
 
 async def show_index():
     _creds = await crud.get_credentials()
-    apps = await crud.get_application()
+    _apps = {}
     creds_to_apps = {}
     for cred in _creds:
-        app = await crud.get_application(cred.app_id)
+        if cred.app_id not in _apps:
+            _apps[cred.app_id] = await crud.get_application(cred.app_id)
+        app = _apps[cred.app_id]
         creds_to_apps[cred] = f"{app.type.name} {cred.date_created}"
-
-    def _start_move():
-        pass
 
     with ui.splitter(limits=(50, 50)).classes("w-full flex-grow") as _splitter:
         with _splitter.before:
@@ -130,6 +131,17 @@ async def show_index():
             right_engine = EnginePreview(creds_to_apps, True).classes(
                 "w-full flex-grow"
             )
+
+    async def _start_move():
+        result = await dialogs.MoveDialog(
+            left_engine.engine,
+            left_engine.playlist,
+            right_engine.engine,
+            right_engine.playlist,
+        )
+        if result:
+            ui.notify("Successfully moved!")
+
     ui.button("RUN", on_click=_start_move).classes("w-full").bind_enabled_from(
         locals(),
         "left_engine",
