@@ -59,6 +59,9 @@ use-poetry-install = true
 [tool.poetry-pyinstaller-plugin.scripts]
 movesic = { source = "movesic/main.py", type = "onefile", bundle = true, windowed = true, hiddenimport = "aiosqlite" }
 
+[tool.poetry-pyinstaller-plugin.include]
+"resources/*" = "resources"
+
 [tool.poetry-pyinstaller-plugin.collect]
 all = ['movesic']
 data = ['nicegui']
