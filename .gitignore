@@ -1,0 +1,17 @@
+# python
+__pycache__/
+.venv/
+/dist
+/build
+/.coverage
+/.python-version
+
+# macos
+.DS_Store
+
+# user
+/.vscode
+/.nicegui
+/.env
+/movesic.sqlite
+/movesic.sqlite-journal

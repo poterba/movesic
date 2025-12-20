@@ -1,0 +1,59 @@
+on:
+  push:
+    branches:
+      - "main"
+    tags:
+      - "v*.*.*"
+  workflow_dispatch:
+
+env:
+  PYTHON_VERSION: '3.12'
+
+permissions:
+  packages: write
+  contents: write
+
+jobs:
+  build:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [
+          ubuntu-latest,
+          windows-latest,
+          macos-latest
+        ]
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          # cache: 'poetry'
+
+      - name: Install poetry
+        run: |
+          pip install poetry
+          poetry self add poetry-pyinstaller-plugin
+          poetry self add poetry-dynamic-versioning[plugin]
+          poetry self add poethepoet[poetry-plugin]
+
+      - name: Build EXE
+        run: |
+          poetry install -E exe
+          poetry build --format pyinstaller
+
+      - uses: actions/upload-artifact@v4
+        if: "!startsWith(github.ref, 'refs/tags/')"
+        with:
+          name: movesic-${{ matrix.os }}
+          path: dist/pyinstaller/*
+          if-no-files-found: error
+
+      - uses: softprops/action-gh-release@v2
+        if: startsWith(github.ref, 'refs/tags/')
+        with:
+          files: |
+            dist/pyinstaller/*
+          prerelease: true
+          make_latest: true

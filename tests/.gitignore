@@ -1,0 +1,4 @@
+# spotipy
+.cache
+# ytmusicapi
+/oauth.json
