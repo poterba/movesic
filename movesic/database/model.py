@@ -34,6 +34,7 @@ class Application(Base):
         lazy="selectin",
     )
 
+
 @dataclass
 class Credentials(Base):
     __tablename__ = "credentials"
@@ -43,7 +44,9 @@ class Credentials(Base):
         nullable=False,
         autoincrement=True,
     )
-    app_id: Mapped[int] = mapped_column(sa.ForeignKey("applications.id"), nullable=False)
+    app_id: Mapped[int] = mapped_column(
+        sa.ForeignKey("applications.id"), nullable=False
+    )
     app = relationship("Application")
     date_created: Mapped[datetime] = mapped_column(sa.DateTime, nullable=False)
     data: Mapped[dict] = mapped_column(sa.JSON, nullable=False)

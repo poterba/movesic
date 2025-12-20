@@ -32,4 +32,4 @@ def downgrade() -> None:
     _ENUM.drop(op.get_bind(), checkfirst=True)
 ```
 
-Fortunately, I've already included this approach into [`mako template`](migrations/script.py.mako), so all you have to do is add new enums to `_ENUMS` list.
+Lucky for you, I've already included this approach into [`mako template`](migrations/script.py.mako), so all you have to do is add new enums to `_ENUMS` list. Enjoy!

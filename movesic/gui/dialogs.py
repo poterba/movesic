@@ -7,25 +7,9 @@ import webbrowser
 from nicegui import run, ui
 
 
+from movesic.config import MovesicConfig
 from movesic.database import model
 from movesic.engines import api
-
-_SPOTIFY_APP_MD = """
-You should create app and get some keys. Tick `Web API` checkbox.
-| Option | Value |
-| ------------- | ------------- |
-| App name | *Anything* |
-| App description | *Anything* |
-| Redirect URIs | http://localhost:44444/ |
-| Which API/SDKs are you planning to use? | Web API |
-"""
-
-_YOUTUBE_APP_MD = """
-You should create project on Dashboard. After add OAuth key on Auth page.
-Add yourself on Audience page to test users.
-"""
-
-_PLAYLIST_DESCRIPTION = "Imported with MoveSIC"
 
 
 class EditApplicationDialog(ui.dialog):
@@ -48,17 +32,15 @@ class EditApplicationDialog(ui.dialog):
             types[e] = e.name
         _props = "readonly" if self.app.id else ""
         _help_messages = {
-            model.SERVICETYPE_ENUM.YOUTUBE_MUSIC: _YOUTUBE_APP_MD,
-            model.SERVICETYPE_ENUM.SPOTIFY: _SPOTIFY_APP_MD,
+            model.SERVICETYPE_ENUM.YOUTUBE_MUSIC: MovesicConfig.get_string("youtube_md"),
+            model.SERVICETYPE_ENUM.SPOTIFY: MovesicConfig.get_string("spotify_md"),
             None: "",
         }
-        "https://console.cloud.google.com/auth"
-        "https://console.cloud.google.com/apis/credentials"
-        "https://developer.spotify.com/dashboard/applications"
 
         type_select = (
             ui.select(
                 types,
+                label=MovesicConfig.get_string("application_type"),
                 value=self.app.type,
             )
             .bind_value(
@@ -73,10 +55,10 @@ class EditApplicationDialog(ui.dialog):
             )
         ui.input(label="CLIENT_ID", value=self.app.data["client_id"]).bind_value(
             self.app.data, "client_id"
-        ).props(_props)
+        ).props(_props).bind_visibility_from(type_select, "value", lambda x: x is not None)
         ui.input(label="SECRET", value=self.app.data["client_secret"]).bind_value(
             self.app.data, "client_secret"
-        ).props(_props)
+        ).props(_props).bind_visibility_from(type_select, "value", lambda x: x is not None)
         if self.app.date_created:
             ui.label(self.app.date_created)
         if not self.app.id:
@@ -188,7 +170,10 @@ class MoveDialog(ui.dialog):
 
     def _move(self):
         if not self.dest_pl:
-            self.dest_pl = self.dest.add_playlist(self.src_pl.name, _PLAYLIST_DESCRIPTION)
+            self.dest_pl = self.dest.add_playlist(
+                self.src_pl.name,
+                MovesicConfig.get_string("playlist_description"),
+            )
             logging.info(f"added playlist {self.dest_pl.name} {self.dest_pl.id}")
 
         songs = self.src.get_songs(self.src_pl)

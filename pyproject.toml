@@ -1,82 +1,49 @@
-[tool.poetry]
+[project]
 name = "movesic"
-version = "0.0.0"
-authors = ["poterba"]
+# version = "0.0.0"
+dynamic = ["version"]
 description = "Simply move your music between services"
-license = "MIT"
-maintainers = ["poterba"]
 readme = "README.md"
+license = "MIT"
+requires-python = ">=3.12"
+dependencies = [
+    "aiosqlite>=0.22.0",
+    "alembic>=1.17.2",
+    "greenlet>=3.3.0",
+    "lxml>=6.0.2",
+    "nicegui>=3.4.1",
+    "platformdirs>=4.5.1",
+    "pygobject>=3.54.5 ; sys_platform == 'linux'",
+    "spotipy>=2.25.2",
+    "sqlalchemy>=2.0.45",
+    "ytmusicapi>=1.11.3",
+]
 
-[tool.poetry.scripts]
-movesic = "movesic.main:main"
+[project.scripts]
+movesic = "movesic.__main__:main"
 
-[tool.poetry.dependencies]
-python = "^3.9,<3.13"
-# ui
-nicegui = "^2.10.0"
-platformdirs = "^4.3.6"
-pywebview = { version = "^5.1", optional = true }
-# api
-ytmusicapi = "^1.7.3"
-spotipy = "^2.24.0"
-# db
-alembic = "^1.14.0"
-sqlalchemy = "^2.0.37"
-aiosqlite = "^0.20.0"
-greenlet = "^3.1.1"
+[project.optional-dependencies]
+native = ["pywebview>=5.1"]
 
-[tool.poetry.extras]
-exe = ["pywebview"]
+[tool.hatch.version]
+source = "uv-dynamic-versioning"
 
-[tool.poetry.group.dev.dependencies]
-ruff = "^0.9.2"
-pyinstaller = "^6.11.1"
-
-[tool.poetry.group.test.dependencies]
-pytest = "^8.3.4"
-pytest-cov = "^6.0.0"
-pytest-alembic = "^0.11.1"
-
-[tool.poetry.requires-plugins]
-poetry-dynamic-versioning = { version = ">=1.0.0,<2.0.0", extras = ["plugin"] }
-poethepoet = { version = "^0.32.1", extras = ["poetry_plugin"] }
-poetry-pyinstaller-plugin = { version = "^1.2.1" }
-
-# generate
-
-[tool.poetry-dynamic-versioning]
-enable = true
-style = "semver"
-
-# package
-
-[tool.poetry-pyinstaller-plugin]
-version = "6.7.0"
-disable-upx = true
-exclude-include = true
-use-poetry-install = true
-
-[tool.poetry-pyinstaller-plugin.scripts]
-movesic = { source = "movesic/main.py", type = "onefile", bundle = true, windowed = true, hiddenimport = "aiosqlite" }
-
-[tool.poetry-pyinstaller-plugin.include]
-"resources/*" = "resources"
-
-[tool.poetry-pyinstaller-plugin.collect]
-all = ['movesic']
-data = ['nicegui']
-
-# lint
+[tool.ruff]
+exclude = ["movesic/database/migrations/versions"]
 
 [tool.ruff.format]
 preview = true
 
-[tool.ruff.lint]
-# Skip unused variable rules (`F841`).
-extend-ignore = ["E402"]
-
-# build
-
 [build-system]
-build-backend = "poetry_dynamic_versioning.backend"
-requires = ["poetry-core>=1.0.0", "poetry-dynamic-versioning>=1.0.0,<2.0.0"]
+requires = ["hatchling", "uv-dynamic-versioning"]
+build-backend = "hatchling.build"
+
+[dependency-groups]
+dev = [
+    "pyinstaller>=6.17.0",
+    "pylance>=1.0.0",
+    "pytest>=9.0.2",
+    "pytest-alembic>=0.12.1",
+    "pytest-cov>=7.0.0",
+    "ruff>=0.14.9",
+]
