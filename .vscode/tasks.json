@@ -4,9 +4,38 @@
     "version": "2.0.0",
     "tasks": [
         {
-            "label": "echo",
+            "label": "alembic: create",
             "type": "shell",
-            "command": "echo Hello"
+            "command": "uv",
+            "args": [
+                "run",
+                "alembic",
+                "revision",
+                "--autogenerate",
+                "-m",
+                "\"${input:alembic_msg}\""
+            ],
+            "problemMatcher": []
+        },
+        {
+            "label": "alembic: upgrade head",
+            "type": "shell",
+            "command": "uv",
+            "args": [
+                "run",
+                "alembic",
+                "upgrade",
+                "head"
+            ],
+            "problemMatcher": []
+        }
+    ],
+    "inputs": [
+        {
+            "id": "alembic_msg",
+            "type": "promptString",
+            "description": "Enter alembic revision message",
+            "default": "new migration"
         }
     ]
 }
