@@ -49,8 +49,11 @@ class Credentials(Base):
         sa.ForeignKey("applications.id"), nullable=False
     )
     app = relationship("Application")
+
     date_created: Mapped[datetime] = mapped_column(sa.DateTime, nullable=False)
     data: Mapped[dict] = mapped_column(sa.JSON, nullable=False)
+    username: Mapped[str] = mapped_column(sa.String, nullable=False, default="")
+    avatar: Mapped[bytes] = mapped_column(sa.LargeBinary, nullable=True)
 
     def __hash__(self):
         return self.id

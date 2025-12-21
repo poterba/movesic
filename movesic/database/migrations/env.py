@@ -49,6 +49,7 @@ def do_run_migrations(connection: Connection):
             context.run_migrations()
     except Exception as e:
         logging.error(f"Migration failed: {e}")
+        raise
 
 async def run_async_migrations():
     connectable = async_engine_from_config(

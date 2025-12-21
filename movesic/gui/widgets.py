@@ -170,7 +170,7 @@ async def _edit_cred(credentials, *args, **kwargs):
     result = await dialogs.EditCredentialsDialog(credentials, apps)
     if result:
         if result.id:
-            # TODO
+            # TODO: update credentials
             pass
         else:
             result.date_created = datetime.now()

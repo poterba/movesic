@@ -7,16 +7,19 @@ readme = "README.md"
 license = "MIT"
 requires-python = ">=3.12"
 dependencies = [
-    "aiosqlite>=0.22.0",
-    "alembic>=1.17.2",
-    "greenlet>=3.3.0",
-    "lxml>=6.0.2",
+    # ui
     "nicegui>=3.4.1",
-    "platformdirs>=4.5.1",
-    "pygobject>=3.54.5 ; sys_platform == 'linux'",
-    "spotipy>=2.25.2",
-    "sqlalchemy>=2.0.45",
+    "greenlet>=3.3.0",
+    # core
     "ytmusicapi>=1.11.3",
+    "spotipy>=2.25.2",
+    # db
+    "sqlalchemy>=2.0.45",
+    "alembic>=1.17.2",
+    "aiosqlite>=0.22.0",
+    # util
+    "platformdirs>=4.5.1",
+    "lxml>=6.0.2",
 ]
 
 [dependency-groups]
@@ -30,7 +33,7 @@ dev = [
 ]
 
 [project.optional-dependencies]
-native = ["pywebview>=5.1"]
+native = ["pywebview>=5.1", "pygobject>=3.54.5 ; sys_platform == 'linux'"]
 
 [project.scripts]
 movesic = "movesic.__main__:main"
