@@ -1,5 +1,7 @@
 import logging
+import tempfile
 from ytmusicapi import YTMusic
+from ytmusicapi.setup import setup_oauth
 from ytmusicapi.auth.oauth import OAuthCredentials
 
 from movesic.database import model
@@ -10,9 +12,10 @@ from movesic.engines.api import Engine
 class Youtube(Engine):
     def __init__(
         self,
-        creds: model.Credentials,
         app: model.Application,
+        creds: model.Credentials | None = None,
     ):
+        self.app = app
         oauth_credentials = OAuthCredentials(**app.data)
         self.ytmusic = YTMusic(
             auth=creds.data if creds else None,
@@ -27,6 +30,14 @@ class Youtube(Engine):
             id=info["channelHandle"],
             external_url=f"https://www.youtube.com/{info['channelHandle']}",
         )
+
+    def authenticate(self):
+        data = None
+        with tempfile.NamedTemporaryFile("rw+", delete=False) as f:
+            setup_oauth(**self.app.data, filepath=f.name)
+            f.seek(0)
+            data = f.read()
+        return data
 
     # playlists
 

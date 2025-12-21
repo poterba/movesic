@@ -5,7 +5,7 @@
 | ------------- | ------------- |
 | App name | *Anything* |
 | App description | *Anything* |
-| Redirect URIs | http://localhost:44444/ |
+| Redirect URIs | http://127.0.0.1:44444/ |
 | Which API/SDKs are you planning to use? | Web API |</string>
     <string id="youtube_md">- You should create project on [Google Dashboard](https://console.cloud.google.com).
 - Create OAuth 2.0 Client IDs on [Credentials page](https://console.cloud.google.com/apis/credentials).

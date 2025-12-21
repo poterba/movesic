@@ -25,6 +25,7 @@ class Application(Base):
     type: Mapped[SERVICETYPE_ENUM] = mapped_column(
         sa.Enum(SERVICETYPE_ENUM), nullable=False
     )
+    name: Mapped[str] = mapped_column(sa.String, nullable=False)
     date_created: Mapped[datetime] = mapped_column(sa.DateTime, nullable=False)
     data: Mapped[dict] = mapped_column(sa.JSON, nullable=False)
 

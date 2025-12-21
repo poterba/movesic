@@ -61,9 +61,9 @@ class EnginePreview(ui.card):
 
     def _to_engine(self, app, creds):
         if app.type == model.SERVICETYPE_ENUM.YOUTUBE_MUSIC:
-            return youtube.Youtube(creds, app)
+            return youtube.Youtube(app, creds)
         elif app.type == model.SERVICETYPE_ENUM.SPOTIFY:
-            return spotify.Spotify(creds, app)
+            return spotify.Spotify(app, creds)
         else:
             raise RuntimeError(f"Unknown service {creds.type}")
 
@@ -147,7 +147,7 @@ async def show_index():
         "left_engine",
         lambda x: x.playlist
         and right_engine.creds
-        and right_engine.creds != left_engine.creds,
+        and (right_engine.creds != left_engine.creds or not right_engine.playlist),
     )
     with ui.row(wrap=False).classes("w-full"):
         ui.list()
@@ -165,7 +165,7 @@ async def _edit_app(application=None, *args, **kwargs):
         ui.navigate.reload()
 
 
-async def _edit_cred(credentials=None, *args, **kwargs):
+async def _edit_cred(credentials, *args, **kwargs):
     apps = await crud.get_application()
     result = await dialogs.EditCredentialsDialog(credentials, apps)
     if result:
@@ -187,7 +187,8 @@ async def applications():
                 with ui.item_section().props("avatar"):
                     ui.image(config.MovesicConfig.resource(_APP_LOGOS[app.type]))
                 with ui.item_section():
-                    ui.item_label(app.date_created)
+                    ui.item_label(app.name)
+                    ui.item_label(app.date_created).props("caption")
         ui.button(icon="add", on_click=_edit_app).classes("w-full")
 
 
@@ -202,4 +203,3 @@ async def credentials():
                     ui.image(config.MovesicConfig.resource(_APP_LOGOS[app.type]))
                 with ui.item_section():
                     ui.item_label(f"{cred.date_created}")
-        ui.button(icon="add", on_click=_edit_cred).classes("w-full")

@@ -25,17 +25,18 @@ def movesic_init():
     logging.info(f"Using storage: {config.MovesicConfig.STORAGE_PATH}")
     database.init(config.MovesicConfig.DATABASE_URL)
 
-
-app.on_startup(movesic_init)
-
-
-@ui.page("/")
-async def index_page():
+def stretch_page():
     # the queries below are used to expand the contend down to the footer (content can then use flex-grow to expand)
     ui.query(".q-page").classes("flex")
     ui.query(".nicegui-content").classes("w-full")
 
-    with ui.left_drawer(value=False) as drawer:
+app.on_startup(movesic_init)
+app.on_connect(stretch_page)
+
+@ui.page("/")
+async def index_page():
+
+    with ui.left_drawer(value=True) as drawer:
         with ui.card().classes("w-full"):
             ui.label("Applications")
             await widgets.applications()

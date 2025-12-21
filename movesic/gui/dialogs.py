@@ -9,7 +9,7 @@ from nicegui import run, ui
 
 from movesic.config import MovesicConfig
 from movesic.database import model
-from movesic.engines import api
+from movesic.engines import api, spotify, youtube
 
 
 class EditApplicationDialog(ui.dialog):
@@ -53,6 +53,9 @@ class EditApplicationDialog(ui.dialog):
             ui.markdown().bind_content_from(
                 type_select, "value", backward=lambda x: _help_messages[x]
             )
+        ui.input(label="NAME", value=self.app.name).bind_value(
+            self.app, "name"
+        ).props(_props).bind_visibility_from(type_select, "value", lambda x: x is not None)
         ui.input(label="CLIENT_ID", value=self.app.data["client_id"]).bind_value(
             self.app.data, "client_id"
         ).props(_props).bind_visibility_from(type_select, "value", lambda x: x is not None)
@@ -63,6 +66,16 @@ class EditApplicationDialog(ui.dialog):
             ui.label(self.app.date_created)
         if not self.app.id:
             ui.button(icon="save", on_click=lambda: self.submit(self.app))
+        else:
+            ui.button("Login", on_click=self._login)
+
+    async def _login(self):
+        dialog = EditCredentialsDialog(
+            creds=None,
+            apps=[self.app],
+        )
+        await dialog
+        self.submit(self.app)
 
 
 class EditCredentialsDialog(ui.dialog):
@@ -89,16 +102,19 @@ class EditCredentialsDialog(ui.dialog):
         apps = {}
         for a in self.apps:
             apps[a.id] = a.type.name
-        ui.select(apps).bind_value(self.creds, "app_id").props(_props)
+        self.app_select = ui.select(apps).bind_value(self.creds, "app_id").props(_props)
+        if len(self.apps) == 1:
+            self.app_select.value = self.apps[0].id
+            self.app_select.props("readonly")
         self.editor = ui.json_editor(
             {
                 "content": {"json": self.creds.data},
-                "readOnly": bool(self.creds.id),
+                "readOnly": True, #bool(self.creds.id),
             },
             on_change=self._on_edit,
         )
         if not self.creds.id:
-            ui.button(icon="save", on_click=lambda: self.submit(self.creds))
+            ui.button("Authenticate", on_click=self._authenticate)
 
     def _on_edit(self, x):
         if x.errors:
@@ -109,6 +125,25 @@ class EditCredentialsDialog(ui.dialog):
             elif "json" in x.content:
                 self.creds.data = x.content["json"]
 
+    async def _authenticate(self):
+        app: int | None = self.app_select.value
+        if not app:
+            ui.notify("No application selected", type="negative")
+            return
+
+        app: model.Application = next(filter(lambda x: x.id == app, self.apps))
+        if app.type == model.SERVICETYPE_ENUM.SPOTIFY:
+            engine = spotify.Spotify(app)
+            engine.authenticate()
+            ui.notify("Authenticated", type="positive")
+            self.submit(self.creds)
+        elif app.type == model.SERVICETYPE_ENUM.YOUTUBE_MUSIC:
+            engine = youtube.Youtube(app)
+            engine.authenticate()
+            ui.notify("Authenticated", type="positive")
+            self.submit(self.creds)
+        else:
+            ui.notify("Unsupported application type", type="negative")
 
 class MoveDialog(ui.dialog):
     def __init__(
