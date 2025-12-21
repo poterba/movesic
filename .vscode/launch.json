@@ -8,6 +8,7 @@
             "module": "movesic",
             "console": "internalConsole",
             "internalConsoleOptions": "openOnSessionStart",
+            "justMyCode": false,
         }
     ]
 }

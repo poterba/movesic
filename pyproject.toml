@@ -19,11 +19,21 @@ dependencies = [
     "ytmusicapi>=1.11.3",
 ]
 
-[project.scripts]
-movesic = "movesic.__main__:main"
+[dependency-groups]
+dev = [
+    "pyinstaller>=6.17.0",
+    "pylance>=1.0.0",
+    "pytest>=9.0.2",
+    "pytest-alembic>=0.12.1",
+    "pytest-cov>=7.0.0",
+    "ruff>=0.14.9",
+]
 
 [project.optional-dependencies]
 native = ["pywebview>=5.1"]
+
+[project.scripts]
+movesic = "movesic.__main__:main"
 
 [tool.hatch.version]
 source = "uv-dynamic-versioning"
@@ -37,13 +47,3 @@ preview = true
 [build-system]
 requires = ["hatchling", "uv-dynamic-versioning"]
 build-backend = "hatchling.build"
-
-[dependency-groups]
-dev = [
-    "pyinstaller>=6.17.0",
-    "pylance>=1.0.0",
-    "pytest>=9.0.2",
-    "pytest-alembic>=0.12.1",
-    "pytest-cov>=7.0.0",
-    "ruff>=0.14.9",
-]
