@@ -1,12 +1,56 @@
+import asyncio
 import logging
-import tempfile
+from datetime import datetime
+import time
+import webbrowser
 from ytmusicapi import YTMusic
-from ytmusicapi.setup import setup_oauth
-from ytmusicapi.auth.oauth import OAuthCredentials
+from ytmusicapi.exceptions import YTMusicUserError
+from ytmusicapi.auth.oauth import OAuthCredentials, RefreshingToken
 
-from movesic.database import model
+from movesic.database import crud, model
 from movesic.engines import api
 from movesic.engines.api import Engine
+
+
+class UserlessToken:
+    def __init__(self, credentials: OAuthCredentials, app_id):
+        self.credentials = credentials
+        self.app_id = app_id
+
+    def wait_for_token(self) -> RefreshingToken:
+        code = self.credentials.get_code()
+        url = f"{code['verification_url']}?user_code={code['user_code']}"
+        webbrowser.open(url)
+
+        while True:
+            try:
+                result = self.credentials.token_from_code(code["device_code"])
+                if "error" in result:
+                    logging.error(result["error"])
+                    raise YTMusicUserError(
+                        f"Authentication not finished yet: {result['error']}"
+                    )
+                logging.info("Youtube token obtained")
+                loop = asyncio.get_running_loop()
+                asyncio.run_coroutine_threadsafe(self.save_to_db(result), loop)
+                return result
+            except YTMusicUserError:
+                time.sleep(5)
+
+    async def save_to_db(self, creds):
+        logging.info("Saving Youtube OAuth credentials to database")
+        
+        try:
+            creds_obj = model.Credentials(
+                app_id=self.app_id,
+                date_created=datetime.now(),
+                data=creds,
+                username="Youtube Music Userless",
+                avatar=None,
+            )
+            await crud.create_credentials(creds_obj)
+        except Exception as e:
+            logging.error(f"Failed to save Youtube OAuth credentials to database: {e}")
 
 
 class Youtube(Engine):
@@ -16,10 +60,10 @@ class Youtube(Engine):
         creds: model.Credentials | None = None,
     ):
         self.app = app
-        oauth_credentials = OAuthCredentials(**app.data)
+        self.creds = OAuthCredentials(**app.data)
         self.ytmusic = YTMusic(
             auth=creds.data if creds else None,
-            oauth_credentials=oauth_credentials,
+            oauth_credentials=self.creds,
         )
 
     def info(self):
@@ -32,12 +76,7 @@ class Youtube(Engine):
         )
 
     def authenticate(self):
-        data = None
-        with tempfile.NamedTemporaryFile("rw+", delete=False) as f:
-            setup_oauth(**self.app.data, filepath=f.name)
-            f.seek(0)
-            data = f.read()
-        return data
+        return UserlessToken(self.creds, self.app.id).wait_for_token()
 
     # playlists
 

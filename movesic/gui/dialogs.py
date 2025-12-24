@@ -8,7 +8,7 @@ from nicegui import run, ui
 
 
 from movesic.config import MovesicConfig
-from movesic.database import model
+from movesic.database import crud, model
 from movesic.engines import api, spotify, youtube
 
 
@@ -64,10 +64,11 @@ class EditApplicationDialog(ui.dialog):
         ).props(_props).bind_visibility_from(type_select, "value", lambda x: x is not None)
         if self.app.date_created:
             ui.label(self.app.date_created)
-        if not self.app.id:
-            ui.button(icon="save", on_click=lambda: self.submit(self.app))
-        else:
+        if self.app.id:
             ui.button("Login", on_click=self._login)
+            ui.button("Delete", on_click=self._delete)
+        else:
+            ui.button(icon="save", on_click=lambda: self.submit(self.app))
 
     async def _login(self):
         dialog = EditCredentialsDialog(
@@ -75,6 +76,11 @@ class EditApplicationDialog(ui.dialog):
             apps=[self.app],
         )
         await dialog
+        self.submit(self.app)
+
+    async def _delete(self):
+        await crud.delete_application(self.app.id)
+        ui.notify("Deleted", type="positive")
         self.submit(self.app)
 
 
@@ -113,7 +119,9 @@ class EditCredentialsDialog(ui.dialog):
             },
             on_change=self._on_edit,
         )
-        if not self.creds.id:
+        if self.creds.id:
+            ui.button("Delete", on_click=self._delete)
+        else:
             ui.button("Authenticate", on_click=self._authenticate)
 
     def _on_edit(self, x):
@@ -144,6 +152,11 @@ class EditCredentialsDialog(ui.dialog):
             self.submit(self.creds)
         else:
             ui.notify("Unsupported application type", type="negative")
+
+    async def _delete(self):
+        await crud.delete_credentials(self.creds.id)
+        ui.notify("Deleted", type="positive")
+        self.submit(self.creds)
 
 class MoveDialog(ui.dialog):
     def __init__(

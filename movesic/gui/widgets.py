@@ -1,6 +1,7 @@
 from datetime import datetime
 import webbrowser
 from functools import partial
+import human_readable
 
 from nicegui import ui
 
@@ -20,7 +21,7 @@ class EnginePreview(ui.card):
         super().__init__(align_items=align_items)
         self.is_dest = is_dest
         self.creds = None
-        self.playlist = None
+        self.current_playlist = None
         self.engine: api.Engine | None = None
         with self:
             self._ui(creds)
@@ -35,29 +36,36 @@ class EnginePreview(ui.card):
             .bind_value(self, "creds")
         )
         self.show_user_info()
-        self.playlist_select = (
+        self.current_playlist_select = (
             ui.select({}, on_change=self._on_playlist_change)
             .classes("w-full")
-            .bind_value(self, "playlist")
+            .bind_value(self, "current_playlist")
             .bind_visibility_from(self, "engine")
         )
         self.show_playlist()
 
     async def _on_engine_change(self, event):
-        creds: model.Credentials = event.value
-        app = await crud.get_application(creds.app_id)
-        if not app:
-            raise RuntimeError("Not found apps for these creds")
-        self.engine = self._to_engine(app, creds)
-        playlists = self.engine.get_playlists()
-        playlists = {x: x.name for x in playlists}
-        if self.is_dest:
-            playlists[None] = "Create new playlist"
-        self.show_user_info.refresh()
+        try:
+            creds: model.Credentials = event.value
+            if not creds:
+                self.current_playlist_select = None
+                return
+            app = await crud.get_application(creds.app_id)
+            if not app:
+                raise RuntimeError("Not found apps for these creds")
+            self.engine = self._to_engine(app, creds)
+            playlists = self.engine.get_playlists()
+            playlists = {x: x.name for x in playlists}
+            if self.is_dest:
+                playlists[None] = "Create new playlist"
+            self.show_user_info.refresh()
 
-        self.playlist = None
-        self.playlist_select.set_options(playlists)
-        self.show_playlist.refresh()
+            self.current_playlist = None
+            self.current_playlist_select.set_options(playlists)
+            self.show_playlist.refresh()
+        except Exception as e:
+            ui.notify(f"Failed to load engine: {e}", type="negative")
+            event.sender.set_value(None)
 
     def _to_engine(self, app, creds):
         if app.type == model.SERVICETYPE_ENUM.YOUTUBE_MUSIC:
@@ -88,11 +96,11 @@ class EnginePreview(ui.card):
 
     @ui.refreshable
     def show_playlist(self):
-        if not self.playlist:
+        if not self.current_playlist:
             ui.label("Select some playlist")
             return
 
-        songs = self.engine.get_songs(self.playlist)
+        songs = self.engine.get_songs(self.current_playlist)
         ui.label(f"{len(songs)} songs")
         with ui.scroll_area().classes("flex-grow"), ui.list().classes("w-full"):
             song: api.Song
@@ -167,13 +175,16 @@ async def _edit_app(application=None, *args, **kwargs):
 
 async def _edit_cred(credentials, *args, **kwargs):
     apps = await crud.get_application()
-    result = await dialogs.EditCredentialsDialog(credentials, apps)
+    result: model.Credentials | None = await dialogs.EditCredentialsDialog(credentials, apps)
     if result:
         if result.id:
-            # TODO: update credentials
-            pass
+            await crud.update_credentials(
+                result.id,
+                app_id=result.app_id,
+                username=result.username,
+                data=result.data,
+            )
         else:
-            result.date_created = datetime.now()
             await crud.create_credentials(result)
         ui.navigate.reload()
 
@@ -188,7 +199,8 @@ async def applications():
                     ui.image(config.MovesicConfig.resource(_APP_LOGOS[app.type]))
                 with ui.item_section():
                     ui.item_label(app.name)
-                    ui.item_label(app.date_created).props("caption")
+                    when = human_readable.date_time(app.date_created)
+                    ui.item_label(when).props("caption")
         ui.button(icon="add", on_click=_edit_app).classes("w-full")
 
 
@@ -202,4 +214,6 @@ async def credentials():
                 with ui.item_section().props("avatar"):
                     ui.image(config.MovesicConfig.resource(_APP_LOGOS[app.type]))
                 with ui.item_section():
-                    ui.item_label(f"{cred.date_created}")
+                    ui.item_label(cred.username)
+                    when = human_readable.date_time(cred.date_created)
+                    ui.item_label(when).props("caption")

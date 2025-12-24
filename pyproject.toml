@@ -20,6 +20,7 @@ dependencies = [
     # util
     "platformdirs>=4.5.1",
     "lxml>=6.0.2",
+    "human-readable>=2.0.0",
 ]
 
 [dependency-groups]
