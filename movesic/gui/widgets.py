@@ -35,7 +35,7 @@ class EnginePreview(ui.card):
             .classes("w-full")
             .bind_value(self, "creds")
         )
-        self.show_user_info()
+        self.show_engine_info()
         self.current_playlist_select = (
             ui.select({}, on_change=self._on_playlist_change)
             .classes("w-full")
@@ -48,24 +48,26 @@ class EnginePreview(ui.card):
         try:
             creds: model.Credentials = event.value
             if not creds:
-                self.current_playlist_select = None
                 return
             app = await crud.get_application(creds.app_id)
             if not app:
                 raise RuntimeError("Not found apps for these creds")
+
             self.engine = self._to_engine(app, creds)
+
             playlists = self.engine.get_playlists()
             playlists = {x: x.name for x in playlists}
             if self.is_dest:
                 playlists[None] = "Create new playlist"
-            self.show_user_info.refresh()
-
-            self.current_playlist = None
             self.current_playlist_select.set_options(playlists)
-            self.show_playlist.refresh()
         except Exception as e:
             ui.notify(f"Failed to load engine: {e}", type="negative")
             event.sender.set_value(None)
+            self.engine = None
+            self.current_playlist = None
+        finally:
+            self.show_engine_info.refresh()
+            self.show_playlist.refresh()
 
     def _to_engine(self, app, creds):
         if app.type == model.SERVICETYPE_ENUM.YOUTUBE_MUSIC:
@@ -79,7 +81,7 @@ class EnginePreview(ui.card):
         self.show_playlist.refresh()
 
     @ui.refreshable
-    def show_user_info(self):
+    def show_engine_info(self):
         if not self.engine:
             ui.label("Select some credentials")
             return
@@ -143,9 +145,9 @@ async def show_index():
     async def _start_move():
         result = await dialogs.MoveDialog(
             left_engine.engine,
-            left_engine.playlist,
+            left_engine.current_playlist,
             right_engine.engine,
-            right_engine.playlist,
+            right_engine.current_playlist,
         )
         if result:
             ui.notify("Successfully moved!")
@@ -153,9 +155,9 @@ async def show_index():
     ui.button("RUN", on_click=_start_move).classes("w-full").bind_enabled_from(
         locals(),
         "left_engine",
-        lambda x: x.playlist
+        lambda x: x.current_playlist
         and right_engine.creds
-        and (right_engine.creds != left_engine.creds or not right_engine.playlist),
+        and (right_engine.creds != left_engine.creds or not right_engine.current_playlist),
     )
     with ui.row(wrap=False).classes("w-full"):
         ui.list()

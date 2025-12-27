@@ -30,15 +30,18 @@ class EditApplicationDialog(ui.dialog):
         types = {}
         for e in model.SERVICETYPE_ENUM:
             types[e] = e.name
-        _props = "readonly" if self.app.id else ""
+        _is_readonly = "readonly" if self.app.id else ""
         _help_messages = {
-            model.SERVICETYPE_ENUM.YOUTUBE_MUSIC: MovesicConfig.get_string("youtube_md"),
+            model.SERVICETYPE_ENUM.YOUTUBE_MUSIC: MovesicConfig.get_string(
+                "youtube_md"
+            ),
             model.SERVICETYPE_ENUM.SPOTIFY: MovesicConfig.get_string("spotify_md"),
             None: "",
         }
 
         type_select = (
-            ui.select(
+            ui
+            .select(
                 types,
                 label=MovesicConfig.get_string("application_type"),
                 value=self.app.type,
@@ -47,23 +50,40 @@ class EditApplicationDialog(ui.dialog):
                 self.app,
                 "type",
             )
-            .props(_props)
+            .props(_is_readonly)
         )
         if not self.app.id:
             ui.markdown().bind_content_from(
                 type_select, "value", backward=lambda x: _help_messages[x]
             )
-        ui.input(label="NAME", value=self.app.name).bind_value(
+        name_select = ui.input(label="NAME", value=self.app.name).bind_value(
             self.app, "name"
-        ).props(_props).bind_visibility_from(type_select, "value", lambda x: x is not None)
-        ui.input(label="CLIENT_ID", value=self.app.data["client_id"]).bind_value(
-            self.app.data, "client_id"
-        ).props(_props).bind_visibility_from(type_select, "value", lambda x: x is not None)
-        ui.input(label="SECRET", value=self.app.data["client_secret"]).bind_value(
-            self.app.data, "client_secret"
-        ).props(_props).bind_visibility_from(type_select, "value", lambda x: x is not None)
+        )
+        client_id_select = ui.input(
+            label="CLIENT_ID",
+            value=self.app.data["client_id"],
+            password=True,
+            password_toggle_button=True,
+        ).bind_value(self.app.data, "client_id")
+        secret_select = ui.input(
+            label="SECRET",
+            value=self.app.data["client_secret"],
+            password=True,
+            password_toggle_button=True,
+        ).bind_value(self.app.data, "client_secret")
+
+        for select in [
+            name_select,
+            client_id_select,
+            secret_select,
+        ]:
+            select.props(_is_readonly).bind_visibility_from(
+                type_select, "value", lambda x: x is not None
+            )
+
         if self.app.date_created:
             ui.label(self.app.date_created)
+
         if self.app.id:
             ui.button("Login", on_click=self._login)
             ui.button("Delete", on_click=self._delete)
@@ -115,7 +135,7 @@ class EditCredentialsDialog(ui.dialog):
         self.editor = ui.json_editor(
             {
                 "content": {"json": self.creds.data},
-                "readOnly": True, #bool(self.creds.id),
+                "readOnly": True,  # bool(self.creds.id),
             },
             on_change=self._on_edit,
         )
@@ -157,6 +177,7 @@ class EditCredentialsDialog(ui.dialog):
         await crud.delete_credentials(self.creds.id)
         ui.notify("Deleted", type="positive")
         self.submit(self.creds)
+
 
 class MoveDialog(ui.dialog):
     def __init__(
