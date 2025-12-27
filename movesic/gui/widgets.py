@@ -152,7 +152,7 @@ async def show_index():
         if result:
             ui.notify("Successfully moved!")
 
-    ui.button("RUN", on_click=_start_move).classes("w-full").bind_enabled_from(
+    ui.button("RUN", icon="arrow_circle_right", on_click=_start_move).classes("w-full").bind_enabled_from(
         locals(),
         "left_engine",
         lambda x: x.current_playlist
