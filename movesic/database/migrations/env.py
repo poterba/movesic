@@ -1,5 +1,6 @@
 import asyncio
 from collections.abc import Iterable
+import logging
 
 from alembic import context
 from alembic.environment import MigrationContext
@@ -43,9 +44,12 @@ def run_migrations_offline():
 def do_run_migrations(connection: Connection):
     context.configure(connection=connection, target_metadata=target_metadata)
 
-    with context.begin_transaction():
-        context.run_migrations()
-
+    try:
+        with context.begin_transaction():
+            context.run_migrations()
+    except Exception as e:
+        logging.error(f"Migration failed: {e}")
+        raise
 
 async def run_async_migrations():
     connectable = async_engine_from_config(
@@ -64,7 +68,7 @@ def run_migrations_online():
     connectable = config.attributes.get("connection", None)
 
     if connectable is None:
-        asyncio_run(run_async_migrations())
+        asyncio.run(run_async_migrations())
     else:
         do_run_migrations(connectable)
 

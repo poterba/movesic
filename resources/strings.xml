@@ -1,12 +1,15 @@
 <base>
-    <string id="spotify">You should create app and get some keys. Tick `Web API` checkbox.
-        | Option | Value |
-        | ------------- | ------------- |
-        | App name | *Anything* |
-        | App description | *Anything* |
-        | Redirect URIs | http://localhost:44444/ |
-        | Which API/SDKs are you planning to use? | Web API |</string>
-    <string id="youtube">You should create project on Dashboard.
-        After add OAuth key on Auth page.
-        Add yourself on Audience page to test users.</string>
+    <string id="spotify_md">- You should create app on [Spotify Developer Dashboard](https://developer.spotify.com/dashboard/applications).
+- Tick `Web API` checkbox.
+| Option | Value |
+| ------------- | ------------- |
+| App name | *Anything* |
+| App description | *Anything* |
+| Redirect URIs | http://127.0.0.1:44444/ |
+| Which API/SDKs are you planning to use? | Web API |</string>
+    <string id="youtube_md">- You should create project on [Google Dashboard](https://console.cloud.google.com).
+- Create OAuth 2.0 Client IDs on [Credentials page](https://console.cloud.google.com/apis/credentials) and pick `"TVs and Limited Input devices"`.
+- Add yourself on [Audience page](https://console.cloud.google.com/auth/audience) to test users.</string>
+    <string id="playlist_description">Imported with MoveSIC</string>
+    <string id="application_type">Application Type</string>
 </base>

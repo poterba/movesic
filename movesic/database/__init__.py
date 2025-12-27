@@ -4,9 +4,9 @@ import logging
 
 from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine, async_sessionmaker
 
-
 _engine = None
 async_session_maker = None
+
 
 @asynccontextmanager
 async def session() -> AsyncGenerator[AsyncSession]:
@@ -16,6 +16,7 @@ async def session() -> AsyncGenerator[AsyncSession]:
         await session.commit()
     finally:
         await session.close()
+
 
 def init(url):
     global _engine

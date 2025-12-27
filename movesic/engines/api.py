@@ -36,6 +36,9 @@ class Engine:
     @abc.abstractmethod
     def info(self) -> UserInfo | None: ...
 
+    @abc.abstractmethod
+    def authenticate(self): ...
+
     # playlists
 
     @abc.abstractmethod

@@ -31,26 +31,34 @@ class DBCacheHandler(CacheHandler):
         return None
 
     async def save_to_db(self):
-        if self.cred:
+        if self.cred.id:
             await crud.update_credentials(
                 self.cred.id,
                 data=self.cred.data,
             )
         else:
-            self.cred = await crud.create_credentials(
-                type=model.SERVICETYPE_ENUM.SPOTIFY,
-                date_created=datetime.now(),
-                data=self.cred.data,
-            )
+            self.cred.date_created = datetime.now()
+            await crud.create_credentials(self.cred)
 
 
 class Spotify(api.Engine):
-    def __init__(self, creds: model.Credentials, app: model.Application):
+    def __init__(
+        self,
+        app: model.Application,
+        creds: model.Credentials | None = None,
+    ):
+        self.app = app
+        cache_handler = DBCacheHandler(
+            creds
+            or model.Credentials(
+                app_id=app.id,
+            )
+        )
         auth_manager = SpotifyOAuth(
             **app.data,
-            redirect_uri="http://localhost:44444/",
+            redirect_uri="http://127.0.0.1:44444/",
             scope=",".join(_SPOTIFY_SCOPES),
-            cache_handler=DBCacheHandler(creds),
+            cache_handler=cache_handler,
         )
         self.sp = spotipy.Spotify(auth_manager=auth_manager)
 
@@ -62,6 +70,16 @@ class Spotify(api.Engine):
             id=info["id"],
             external_url=info["external_urls"]["spotify"],
         )
+
+    def authenticate(self):
+        info = self.sp.current_user()
+        return info
+
+        # auth_manager = SpotifyOAuth(
+        #     redirect_uri="http://localhost:44444/",
+        #     scope=",".join(_SPOTIFY_SCOPES),
+        #     cache_handler=DBCacheHandler(creds) if creds else None,
+        # )
 
     # playlist
 

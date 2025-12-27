@@ -90,3 +90,20 @@ async def update_application(id, **kwargs):
 
 async def update_credentials(id, **kwargs):
     return await _update_cls(model.Credentials, model.Credentials.id, id, **kwargs)
+
+
+# delete
+
+
+async def _delete_class(cls, id):
+    async with session() as ass:
+        item = await ass.get(cls, id)
+        await ass.delete(item)
+
+
+async def delete_application(id):
+    await _delete_class(model.Application, id)
+
+
+async def delete_credentials(id):
+    await _delete_class(model.Credentials, id)

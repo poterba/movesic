@@ -10,8 +10,8 @@ __pycache__/
 .DS_Store
 
 # user
-/.vscode
 /.nicegui
 /.env
+/movesic.log
 /movesic.sqlite
 /movesic.sqlite-journal

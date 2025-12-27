@@ -25,6 +25,7 @@ class Application(Base):
     type: Mapped[SERVICETYPE_ENUM] = mapped_column(
         sa.Enum(SERVICETYPE_ENUM), nullable=False
     )
+    name: Mapped[str] = mapped_column(sa.String, nullable=False)
     date_created: Mapped[datetime] = mapped_column(sa.DateTime, nullable=False)
     data: Mapped[dict] = mapped_column(sa.JSON, nullable=False)
 
@@ -33,6 +34,7 @@ class Application(Base):
         cascade="all, delete-orphan",
         lazy="selectin",
     )
+
 
 @dataclass
 class Credentials(Base):
@@ -43,10 +45,15 @@ class Credentials(Base):
         nullable=False,
         autoincrement=True,
     )
-    app_id: Mapped[int] = mapped_column(sa.ForeignKey("applications.id"), nullable=False)
+    app_id: Mapped[int] = mapped_column(
+        sa.ForeignKey("applications.id"), nullable=False
+    )
     app = relationship("Application")
+
     date_created: Mapped[datetime] = mapped_column(sa.DateTime, nullable=False)
     data: Mapped[dict] = mapped_column(sa.JSON, nullable=False)
+    username: Mapped[str] = mapped_column(sa.String, nullable=False, default="")
+    avatar: Mapped[bytes] = mapped_column(sa.LargeBinary, nullable=True)
 
     def __hash__(self):
         return self.id

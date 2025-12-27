@@ -1,0 +1,16 @@
+{
+    "python.testing.pytestArgs": [
+        "tests"
+    ],
+    "python.testing.unittestEnabled": false,
+    "python.testing.pytestEnabled": true,
+    "sqltools.useNodeRuntime": true,
+    "sqltools.connections": [
+        {
+            "previewLimit": 50,
+            "driver": "SQLite",
+            "database": "/Users/v/Library/Application Support/movesic/movesic.sqlite",
+            "name": "movesic"
+        }
+    ]
+}
