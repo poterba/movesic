@@ -1,9 +1,9 @@
 on:
   push:
-    # branches:
-    #   - "main"
-    # tags:
-    #   - "v*.*.*"
+    branches:
+      - "main"
+    tags:
+      - "v*.*.*"
   workflow_dispatch:
 
 env:
@@ -39,9 +39,9 @@ jobs:
         with:
           name: movesic-${{ matrix.os }}
           path: |
-            dist/pyinstaller/macosx_*/movesic.app
-            dist/pyinstaller/win_amd64/movesic.exe
-            dist/pyinstaller/manylinux_*/movesic
+            dist/movesic.app
+            dist/movesic.exe
+            dist/movesic
           if-no-files-found: ignore
 
       - uses: softprops/action-gh-release@v2
