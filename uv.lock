@@ -405,6 +405,18 @@ wheels = [
 ]
 
 [[package]]
+name = "deezer-python"
+version = "7.2.0"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "httpx" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/49/30/d820703459480eeb98f909877e4c109d07734565854e59d1f461d5079486/deezer_python-7.2.0.tar.gz", hash = "sha256:3d57d4399ea0b075816b93fe7cd86e82e080250f67bdcd230e9431fe85a7cb25", size = 46003, upload-time = "2025-09-18T07:49:23.142Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/14/a1/8bbb81188c5f7511bec6ec9f44b1ce481c9bcf9a211a00d8355e842c6644/deezer_python-7.2.0-py3-none-any.whl", hash = "sha256:80601f3fa163ec9e5675aea1e84d14843418fa5be0242a8345486d5bfaed5e0b", size = 24377, upload-time = "2025-09-18T07:49:21.604Z" },
+]
+
+[[package]]
 name = "docutils"
 version = "0.22.4"
 source = { registry = "https://pypi.org/simple" }
@@ -888,6 +900,7 @@ source = { editable = "." }
 dependencies = [
     { name = "aiosqlite" },
     { name = "alembic" },
+    { name = "deezer-python" },
     { name = "greenlet" },
     { name = "human-readable" },
     { name = "lxml" },
@@ -918,6 +931,7 @@ dev = [
 requires-dist = [
     { name = "aiosqlite", specifier = ">=0.22.0" },
     { name = "alembic", specifier = ">=1.17.2" },
+    { name = "deezer-python", specifier = ">=7.2.0" },
     { name = "greenlet", specifier = ">=3.3.0" },
     { name = "human-readable", specifier = ">=2.0.0" },
     { name = "lxml", specifier = ">=6.0.2" },

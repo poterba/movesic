@@ -7,5 +7,6 @@
 Synchronize your music library between services.
 
 Supported services:
-- Youtube Music (via [ytmusicapi](https://github.com/sigma67/ytmusicapi))
 - Spotify (via [spotipy](https://github.com/spotipy-dev/spotipy))
+- Deezer (via [deezer-python](https://github.com/browniebroke/deezer-python))
+- Youtube Music (via [ytmusicapi](https://github.com/sigma67/ytmusicapi))

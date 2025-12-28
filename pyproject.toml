@@ -13,6 +13,7 @@ dependencies = [
     # core
     "ytmusicapi>=1.11.3",
     "spotipy>=2.25.2",
+    "deezer-python>=7.2.0",
     # db
     "sqlalchemy>=2.0.45",
     "alembic>=1.17.2",
