@@ -1,6 +1,9 @@
 on:
   pull_request:
     branches: [ main ]
+    types:
+      - opened
+      - edited
   workflow_dispatch:
 
 env:
