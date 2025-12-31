@@ -3,12 +3,12 @@ import logging
 import pytest
 
 from movesic.engines import api
-from tests.conftest import spotify, youtube
+from tests.conftest import spotify, youtube, deezer
 
 _TEST_SONG = ("TERRITORY", "The Blaze")
 
 
-@pytest.mark.parametrize("engine", [spotify, youtube], indirect=True)
+@pytest.mark.parametrize("engine", [spotify, youtube, deezer], indirect=True)
 def test_read(engine: api.Engine, caplog):
     caplog.set_level(logging.DEBUG)
     _info = engine.info()
@@ -38,3 +38,14 @@ def test_write(engine: api.Engine, caplog):
     engine.add_song_to_playlist(_songs[0], _playlist)
     _result = engine.delete_playlist(_playlist)
     assert _result is True  # Ensure the playlist is deleted successfully
+
+def test_deezer(caplog):
+    _deezer = deezer() 
+    caplog.set_level(logging.DEBUG)
+    _params = _deezer.authenticate()
+    user = _deezer.info()
+    assert user is not None  # Ensure user info is retrieved
+    _song = _deezer.find_song(*_TEST_SONG)
+    assert _song is not None  # Ensure a song is found
+    assert isinstance(_song, list)  # Ensure the result is a list
+    assert len(_song) > 0  # Ensure the list is not empty
